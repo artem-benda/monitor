@@ -17,12 +17,6 @@ func UpdateHandler(w http.ResponseWriter, r *http.Request) {
 		{
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
-	/*
-		case !strings.HasPrefix(r.Header.Get("Content-type"), "text/plain"):
-			{
-				http.Error(w, "Content type not supported", http.StatusBadRequest)
-			}
-	*/
 	case len(params) > 0 && !model.ValidMetricKind(params[0]):
 		{
 			http.Error(w, "Metric type not supported", http.StatusBadRequest)
@@ -40,7 +34,7 @@ func UpdateHandler(w http.ResponseWriter, r *http.Request) {
 			if err := service.UpdateMetric(storage.Store, params[0], params[1], params[2]); err == nil {
 				w.WriteHeader(http.StatusOK)
 			} else {
-				http.Error(w, "Bad metric value", http.StatusUnprocessableEntity)
+				http.Error(w, "Bad metric value", http.StatusBadRequest)
 			}
 		}
 	default:

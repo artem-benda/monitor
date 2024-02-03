@@ -21,11 +21,11 @@ func UpdateHandler(w http.ResponseWriter, r *http.Request) {
 		{
 			http.Error(w, "Content type not supported", http.StatusBadRequest)
 		}
-	case len(params) == 3 && !model.ValidMetricKind(params[0]):
+	case len(params) > 0 && !model.ValidMetricKind(params[0]):
 		{
 			http.Error(w, "Metric type not supported", http.StatusBadRequest)
 		}
-	case len(params) == 3 && params[1] == "":
+	case len(params) < 2 || params[1] == "":
 		{
 			http.Error(w, "Metric name cannot be empty", http.StatusNotFound)
 		}

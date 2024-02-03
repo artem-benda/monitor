@@ -17,10 +17,12 @@ func UpdateHandler(w http.ResponseWriter, r *http.Request) {
 		{
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
-	case !strings.HasPrefix(r.Header.Get("Content-type"), "text/plain"):
-		{
-			http.Error(w, "Content type not supported", http.StatusBadRequest)
-		}
+	/*
+		case !strings.HasPrefix(r.Header.Get("Content-type"), "text/plain"):
+			{
+				http.Error(w, "Content type not supported", http.StatusBadRequest)
+			}
+	*/
 	case len(params) > 0 && !model.ValidMetricKind(params[0]):
 		{
 			http.Error(w, "Metric type not supported", http.StatusBadRequest)
@@ -29,7 +31,7 @@ func UpdateHandler(w http.ResponseWriter, r *http.Request) {
 		{
 			http.Error(w, "Metric name cannot be empty", http.StatusNotFound)
 		}
-	case len(params) != 3:
+	case len(params) < 3 || params[2] == "":
 		{
 			http.Error(w, "Invalid parameters values", http.StatusUnprocessableEntity)
 		}

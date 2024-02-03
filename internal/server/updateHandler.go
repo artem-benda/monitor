@@ -17,7 +17,7 @@ func UpdateHandler(w http.ResponseWriter, r *http.Request) {
 		{
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
-	case r.Header.Get("Content-type") != "text/plain":
+	case !strings.HasPrefix(r.Header.Get("Content-type"), "text/plain"):
 		{
 			http.Error(w, "Content type not supported", http.StatusBadRequest)
 		}

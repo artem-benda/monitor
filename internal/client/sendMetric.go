@@ -9,9 +9,9 @@ import (
 	"strings"
 )
 
-func SendMetric(httpClient *http.Client, apiURL string, kind string, name string, strVal string) error {
+func sendMetric(httpClient *http.Client, apiURL string, kind string, name string, strVal string) error {
 	rootURL, _ := strings.CutSuffix(apiURL, "/")
-	url := fmt.Sprintf("%s/%s/%s/%s", rootURL, url.PathEscape(kind), url.PathEscape(name), url.PathEscape(strVal))
+	url := fmt.Sprintf("%s/update/%s/%s/%s", rootURL, url.PathEscape(kind), url.PathEscape(name), url.PathEscape(strVal))
 
 	resp, err := httpClient.Post(url, "text/plain", bytes.NewBuffer([]byte{}))
 	if err != nil {

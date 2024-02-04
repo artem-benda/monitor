@@ -4,6 +4,10 @@ type memCounter struct {
 	currentValue uint64
 }
 
+func NewCounter() Counter {
+	return &memCounter{}
+}
+
 func (c *memCounter) IncrementAndGet() uint64 {
 	c.currentValue++
 	return c.currentValue

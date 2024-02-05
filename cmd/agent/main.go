@@ -1,17 +1,18 @@
 package main
 
 import (
-	"net/http"
 	"time"
 
 	"github.com/artem-benda/monitor/internal/client"
 	"github.com/artem-benda/monitor/internal/model"
 	"github.com/artem-benda/monitor/internal/service"
 	"github.com/artem-benda/monitor/internal/storage"
+	"github.com/go-resty/resty/v2"
 )
 
 func main() {
-	httpClient := &http.Client{Timeout: 30 * time.Second}
+	resty := resty.New()
+	resty.SetTimeout(30 * time.Second)
 
 	for {
 		var metrics map[model.Metric]string
@@ -19,7 +20,7 @@ func main() {
 			metrics = service.ReadMetrics(storage.CounterStore)
 			time.Sleep(2 * time.Second)
 		}
-		client.SendAllMetrics(httpClient, "http://localhost:8080/", metrics)
+		client.SendAllMetrics(resty, "http://localhost:8080/", metrics)
 		storage.CounterStore.Reset()
 	}
 }

@@ -1,5 +1,7 @@
 package model
 
+import "strconv"
+
 const (
 	GaugeKind   = "gauge"
 	CounterKind = "counter"
@@ -20,4 +22,24 @@ func NewGaugeMetric(name string) Metric {
 
 func NewCounterMetric(name string) Metric {
 	return Metric{Kind: CounterKind, Name: name}
+}
+
+func StringValue(metric Metric, val any) (string, bool) {
+	switch metric.Kind {
+	case CounterKind:
+		{
+			if intVal, ok := val.(int64); ok {
+				strVal := strconv.FormatInt(intVal, 10)
+				return strVal, true
+			}
+		}
+	case GaugeKind:
+		{
+			if floatVal, ok := val.(float64); ok {
+				strVal := strconv.FormatFloat(floatVal, 'f', -1, 64)
+				return strVal, true
+			}
+		}
+	}
+	return "", false
 }

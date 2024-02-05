@@ -1,27 +1,30 @@
 package client
 
 import (
-	"bytes"
 	"fmt"
-	"io"
 	"net/http"
-	"net/url"
 	"strings"
+
+	"github.com/go-resty/resty/v2"
 )
 
-func sendMetric(httpClient *http.Client, apiURL string, kind string, name string, strVal string) error {
+func sendMetric(resty *resty.Client, apiURL string, kind string, name string, strVal string) error {
 	rootURL, _ := strings.CutSuffix(apiURL, "/")
-	url := fmt.Sprintf("%s/update/%s/%s/%s", rootURL, url.PathEscape(kind), url.PathEscape(name), url.PathEscape(strVal))
+	url := fmt.Sprintf("%s/update/{metricKind}/{metricName}/{strVal}", rootURL)
 
-	resp, err := httpClient.Post(url, "text/plain", bytes.NewBuffer([]byte{}))
+	resp, err := resty.R().
+		SetPathParams(map[string]string{
+			"metricKind": kind,
+			"metricName": name,
+			"strVal":     strVal,
+		}).
+		SetBody("").
+		Post(url)
 	if err != nil {
 		return err
 	}
-
-	defer resp.Body.Close()
-	_, err = io.ReadAll(resp.Body)
-	if err != nil {
-		return err
+	if resp.StatusCode() != http.StatusOK {
+		return fmt.Errorf("http error, status code = %d", resp.StatusCode())
 	}
 	return nil
 }

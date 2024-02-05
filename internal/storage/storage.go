@@ -6,4 +6,5 @@ type Storage interface {
 	Get(key model.Metric) (any, bool)
 	Put(key model.Metric, value any)
 	UpdateFunc(key model.Metric, fn func(prev any) any)
+	GetAll() map[model.Metric]any
 }

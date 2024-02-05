@@ -24,4 +24,8 @@ func (m *memStorage) UpdateFunc(key model.Metric, fn func(prev any) any) {
 	m.values[key] = fn(prev)
 }
 
+func (m memStorage) GetAll() map[model.Metric]any {
+	return m.values
+}
+
 var Store = NewStorage()

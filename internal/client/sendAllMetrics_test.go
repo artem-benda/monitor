@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/artem-benda/monitor/internal/model"
+	"github.com/go-resty/resty/v2"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -23,6 +24,7 @@ func TestSendAllMetrics(t *testing.T) {
 	}))
 	defer srv.Close()
 	client := srv.Client()
-	SendAllMetrics(client, srv.URL, metrics)
+	resty := resty.NewWithClient(client)
+	SendAllMetrics(resty, srv.URL, metrics)
 	assert.Equal(t, len(metrics), count)
 }

@@ -68,20 +68,20 @@ func TestMakeUpdateHandler(t *testing.T) {
 			},
 		},
 		{
-			name:        "Empty counter metric value",
+			name:        "Non numeric counter metric value",
 			requestPath: "/update/counter/testmetric",
 			want: want{
-				code:        422,
-				response:    "Invalid parameters values\n",
+				code:        400,
+				response:    "Bad metric value\n",
 				contentType: "text/plain; charset=utf-8",
 			},
 		},
 		{
-			name:        "Empty gauge metric value",
+			name:        "Non numeric gauge metric value",
 			requestPath: "/update/gauge/testmetric",
 			want: want{
-				code:        422,
-				response:    "Invalid parameters values\n",
+				code:        400,
+				response:    "Bad metric value\n",
 				contentType: "text/plain; charset=utf-8",
 			},
 		},

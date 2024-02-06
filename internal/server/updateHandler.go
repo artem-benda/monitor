@@ -44,13 +44,13 @@ func extractUpdatePathParams(urlPath string) (string, string, string) {
 	log.Printf("params: %s", params)
 
 	switch {
-	case len(params) <= 3:
+	case len(params) >= 3:
 		strVal = params[2]
 		fallthrough
-	case len(params) <= 2:
+	case len(params) >= 2:
 		metricName = params[1]
 		fallthrough
-	case len(params) <= 1:
+	case len(params) >= 1:
 		metricKind = params[0]
 	}
 	return metricKind, metricName, strVal

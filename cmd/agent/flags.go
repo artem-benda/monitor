@@ -24,7 +24,9 @@ func parseFlags() {
 		PollInterval   int    `env:"POLL_INTERVAL"`
 	}
 
-	env.Parse(&envConfig)
+	if err := env.Parse(&envConfig); err != nil {
+		panic(err)
+	}
 	if envConfig.ServerEndpoint != "" {
 		serverEndpoint = envConfig.ServerEndpoint
 	}

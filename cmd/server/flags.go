@@ -16,7 +16,9 @@ func parseFlags() {
 		Endpoint string `env:"ADDRESS"`
 	}
 
-	env.Parse(&envConfig)
+	if err := env.Parse(&envConfig); err != nil {
+		panic(err)
+	}
 	if envConfig.Endpoint != "" {
 		endpoint = envConfig.Endpoint
 	}

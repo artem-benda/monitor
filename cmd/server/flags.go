@@ -1,10 +1,23 @@
 package main
 
-import "flag"
+import (
+	"flag"
+
+	"github.com/caarlos0/env/v10"
+)
 
 var endpoint string
 
 func parseFlags() {
 	flag.StringVar(&endpoint, "a", "localhost:8080", "address and port of metrics server")
 	flag.Parse()
+
+	var envConfig struct {
+		Endpoint string `env:"ADDRESS"`
+	}
+
+	env.Parse(&envConfig)
+	if envConfig.Endpoint != "" {
+		endpoint = envConfig.Endpoint
+	}
 }

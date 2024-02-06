@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/artem-benda/monitor/internal/server"
-	"github.com/artem-benda/monitor/internal/storage"
+	"github.com/artem-benda/monitor/internal/server/storage"
 	"github.com/go-chi/chi/v5"
 )
 

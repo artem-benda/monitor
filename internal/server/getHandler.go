@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"github.com/artem-benda/monitor/internal/model"
-	"github.com/artem-benda/monitor/internal/service"
-	"github.com/artem-benda/monitor/internal/storage"
+	"github.com/artem-benda/monitor/internal/server/service"
+	"github.com/artem-benda/monitor/internal/server/storage"
 	"github.com/go-chi/chi/v5"
 )
 

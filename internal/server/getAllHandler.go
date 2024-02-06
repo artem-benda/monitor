@@ -5,8 +5,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/artem-benda/monitor/internal/service"
-	"github.com/artem-benda/monitor/internal/storage"
+	"github.com/artem-benda/monitor/internal/server/service"
+	"github.com/artem-benda/monitor/internal/server/storage"
 )
 
 func MakeGetAllHandler(store storage.Storage) func(w http.ResponseWriter, r *http.Request) {

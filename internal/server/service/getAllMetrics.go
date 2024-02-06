@@ -2,7 +2,7 @@ package service
 
 import (
 	"github.com/artem-benda/monitor/internal/model"
-	"github.com/artem-benda/monitor/internal/storage"
+	"github.com/artem-benda/monitor/internal/server/storage"
 )
 
 func GetAllMetrics(storage storage.Storage) map[model.Metric]string {

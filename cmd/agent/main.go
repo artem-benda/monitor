@@ -4,9 +4,9 @@ import (
 	"time"
 
 	"github.com/artem-benda/monitor/internal/client"
+	"github.com/artem-benda/monitor/internal/client/service"
+	"github.com/artem-benda/monitor/internal/client/storage"
 	"github.com/artem-benda/monitor/internal/model"
-	"github.com/artem-benda/monitor/internal/service"
-	"github.com/artem-benda/monitor/internal/storage"
 	"github.com/go-resty/resty/v2"
 )
 

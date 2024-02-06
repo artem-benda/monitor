@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/artem-benda/monitor/internal/model"
-	"github.com/artem-benda/monitor/internal/service"
-	"github.com/artem-benda/monitor/internal/storage"
+	"github.com/artem-benda/monitor/internal/server/service"
+	"github.com/artem-benda/monitor/internal/server/storage"
 )
 
 func MakeUpdateHandler(store storage.Storage) func(w http.ResponseWriter, r *http.Request) {

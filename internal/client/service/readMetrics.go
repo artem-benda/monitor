@@ -5,8 +5,8 @@ import (
 	"runtime"
 	"strconv"
 
+	"github.com/artem-benda/monitor/internal/client/storage"
 	"github.com/artem-benda/monitor/internal/model"
-	"github.com/artem-benda/monitor/internal/storage"
 )
 
 func ReadMetrics(counter storage.Counter) map[model.Metric]string {

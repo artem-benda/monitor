@@ -5,8 +5,8 @@ import (
 	"runtime"
 	"strconv"
 
+	"github.com/artem-benda/monitor/internal/client/storage"
 	"github.com/artem-benda/monitor/internal/model"
-	"github.com/artem-benda/monitor/internal/storage"
 )
 
 func ReadMetrics(counter storage.Counter) map[model.Metric]string {
@@ -18,7 +18,7 @@ func ReadMetrics(counter storage.Counter) map[model.Metric]string {
 	m[model.NewGaugeMetric("Alloc")] = strconv.FormatUint(stats.Alloc, 10)
 	m[model.NewGaugeMetric("BuckHashSys")] = strconv.FormatUint(stats.BuckHashSys, 10)
 	m[model.NewGaugeMetric("Frees")] = strconv.FormatUint(stats.Frees, 10)
-	m[model.NewGaugeMetric("GCCPUFraction")] = strconv.FormatFloat(stats.GCCPUFraction, 'f', 5, 64)
+	m[model.NewGaugeMetric("GCCPUFraction")] = strconv.FormatFloat(stats.GCCPUFraction, 'f', -1, 64)
 	m[model.NewGaugeMetric("GCSys")] = strconv.FormatUint(stats.GCSys, 10)
 	m[model.NewGaugeMetric("HeapAlloc")] = strconv.FormatUint(stats.HeapAlloc, 10)
 	m[model.NewGaugeMetric("HeapIdle")] = strconv.FormatUint(stats.HeapIdle, 10)

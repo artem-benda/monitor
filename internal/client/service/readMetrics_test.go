@@ -3,7 +3,7 @@ package service
 import (
 	"testing"
 
-	"github.com/artem-benda/monitor/internal/storage"
+	"github.com/artem-benda/monitor/internal/client/storage"
 	"github.com/stretchr/testify/assert"
 )
 

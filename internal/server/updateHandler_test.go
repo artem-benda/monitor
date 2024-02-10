@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/artem-benda/monitor/internal/storage"
+	"github.com/artem-benda/monitor/internal/server/storage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -24,7 +24,7 @@ func TestMakeUpdateHandler(t *testing.T) {
 	}{
 		{
 			name:        "Receive valid counter metric",
-			requestPath: "/counter/testcounter/3",
+			requestPath: "/update/counter/testcounter/3",
 			want: want{
 				code:        200,
 				response:    "",
@@ -33,7 +33,7 @@ func TestMakeUpdateHandler(t *testing.T) {
 		},
 		{
 			name:        "Receive valid gauge metric",
-			requestPath: "/gauge/testcounter/3",
+			requestPath: "/update/gauge/testcounter/3",
 			want: want{
 				code:        200,
 				response:    "",
@@ -42,7 +42,7 @@ func TestMakeUpdateHandler(t *testing.T) {
 		},
 		{
 			name:        "Invalid metric kind",
-			requestPath: "/invalid/testcounter/3",
+			requestPath: "/update/invalid/testcounter/3",
 			want: want{
 				code:        400,
 				response:    "Metric type not supported\n",
@@ -51,7 +51,7 @@ func TestMakeUpdateHandler(t *testing.T) {
 		},
 		{
 			name:        "Empty counter metric name",
-			requestPath: "/counter/",
+			requestPath: "/update/counter/",
 			want: want{
 				code:        404,
 				response:    "Metric name cannot be empty\n",
@@ -60,7 +60,7 @@ func TestMakeUpdateHandler(t *testing.T) {
 		},
 		{
 			name:        "Empty gauge metric name",
-			requestPath: "/gauge/",
+			requestPath: "/update/gauge/",
 			want: want{
 				code:        404,
 				response:    "Metric name cannot be empty\n",
@@ -68,26 +68,26 @@ func TestMakeUpdateHandler(t *testing.T) {
 			},
 		},
 		{
-			name:        "Empty counter metric value",
-			requestPath: "/counter/testmetric",
+			name:        "Non numeric counter metric value",
+			requestPath: "/update/counter/testmetric",
 			want: want{
-				code:        422,
-				response:    "Invalid parameters values\n",
+				code:        400,
+				response:    "Bad metric value\n",
 				contentType: "text/plain; charset=utf-8",
 			},
 		},
 		{
-			name:        "Empty gauge metric value",
-			requestPath: "/gauge/testmetric",
+			name:        "Non numeric gauge metric value",
+			requestPath: "/update/gauge/testmetric",
 			want: want{
-				code:        422,
-				response:    "Invalid parameters values\n",
+				code:        400,
+				response:    "Bad metric value\n",
 				contentType: "text/plain; charset=utf-8",
 			},
 		},
 		{
 			name:        "Not a number counter metric value",
-			requestPath: "/counter/testmetric/badval",
+			requestPath: "/update/counter/testmetric/badval",
 			want: want{
 				code:        400,
 				response:    "Bad metric value\n",
@@ -96,7 +96,7 @@ func TestMakeUpdateHandler(t *testing.T) {
 		},
 		{
 			name:        "Not a number gauge metric value",
-			requestPath: "/gauge/testmetric/badval",
+			requestPath: "/update/gauge/testmetric/badval",
 			want: want{
 				code:        400,
 				response:    "Bad metric value\n",

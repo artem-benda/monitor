@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	"github.com/artem-benda/monitor/internal/model"
-	"github.com/artem-benda/monitor/internal/storage"
+	"github.com/artem-benda/monitor/internal/server/storage"
 )
 
 func UpdateMetric(s storage.Storage, kind string, name string, strVal string) error {

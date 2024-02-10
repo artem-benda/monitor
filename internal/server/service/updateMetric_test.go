@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/artem-benda/monitor/internal/model"
-	"github.com/artem-benda/monitor/internal/storage"
+	"github.com/artem-benda/monitor/internal/server/storage"
 	"github.com/stretchr/testify/assert"
 )
 

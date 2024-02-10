@@ -12,7 +12,7 @@ func UpdateMetric(s storage.Storage, kind string, name string, strVal string) er
 	switch kind {
 	case model.CounterKind:
 		{
-			if value, err := strconv.Atoi(strVal); err == nil {
+			if value, err := strconv.ParseInt(strVal, 10, 64); err == nil {
 				key := model.Metric{Kind: kind, Name: name}
 				s.UpdateFunc(key, func(prev any) any {
 					if prevInt, ok := prev.(int64); ok {

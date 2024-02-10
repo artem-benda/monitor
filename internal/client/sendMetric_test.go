@@ -64,7 +64,8 @@ func Test_sendMetric(t *testing.T) {
 			defer srv.Close()
 			client := srv.Client()
 			resty := resty.NewWithClient(client)
-			err := sendMetric(resty, srv.URL, tt.metric.kind, tt.metric.name, tt.metric.strVal)
+			resty.SetBaseURL(srv.URL)
+			err := sendMetric(resty, tt.metric.kind, tt.metric.name, tt.metric.strVal)
 			assert.NoError(t, err)
 		})
 	}

@@ -14,22 +14,22 @@ import (
 func main() {
 	parseFlags()
 	resty := resty.New()
+	serverEndpointURL := fmt.Sprintf("http://%s", config.ServerEndpoint)
+	resty.SetBaseURL(serverEndpointURL)
 	resty.SetTimeout(30 * time.Second)
-
-	serverEndpointURL := fmt.Sprintf("http://%s", serverEndpoint)
 
 	var metrics map[model.Metric]string
 
 	go func() {
 		for {
 			metrics = service.ReadMetrics(storage.CounterStore)
-			time.Sleep(time.Duration(pollInterval) * time.Second)
+			time.Sleep(time.Duration(config.PollInterval) * time.Second)
 		}
 	}()
 
 	for {
-		client.SendAllMetrics(resty, serverEndpointURL, metrics)
+		client.SendAllMetrics(resty, metrics)
 		storage.CounterStore.Reset()
-		time.Sleep(time.Duration(reportInterval) * time.Second)
+		time.Sleep(time.Duration(config.ReportInterval) * time.Second)
 	}
 }

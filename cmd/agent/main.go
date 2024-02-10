@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/artem-benda/monitor/internal/client"
@@ -11,16 +12,24 @@ import (
 )
 
 func main() {
+	parseFlags()
 	resty := resty.New()
 	resty.SetTimeout(30 * time.Second)
 
-	for {
-		var metrics map[model.Metric]string
-		for i := 0; i < 5; i++ {
+	serverEndpointURL := fmt.Sprintf("http://%s", serverEndpoint)
+
+	var metrics map[model.Metric]string
+
+	go func() {
+		for {
 			metrics = service.ReadMetrics(storage.CounterStore)
-			time.Sleep(2 * time.Second)
+			time.Sleep(time.Duration(pollInterval) * time.Second)
 		}
-		client.SendAllMetrics(resty, "http://localhost:8080/", metrics)
+	}()
+
+	for {
+		client.SendAllMetrics(resty, serverEndpointURL, metrics)
 		storage.CounterStore.Reset()
+		time.Sleep(time.Duration(reportInterval) * time.Second)
 	}
 }

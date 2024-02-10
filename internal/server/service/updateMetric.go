@@ -8,6 +8,11 @@ import (
 	"github.com/artem-benda/monitor/internal/server/storage"
 )
 
+var (
+	errIllegalArgument        = errors.New("illegal argument")
+	errMetricKindNotSupported = errors.New("metric kind not supported")
+)
+
 func UpdateMetric(s storage.Storage, kind string, name string, strVal string) error {
 	switch kind {
 	case model.CounterKind:
@@ -20,7 +25,7 @@ func UpdateMetric(s storage.Storage, kind string, name string, strVal string) er
 					} else if prev == nil {
 						return value
 					} else {
-						return errors.New("illegal argument")
+						return errIllegalArgument
 					}
 				})
 			} else {
@@ -38,7 +43,7 @@ func UpdateMetric(s storage.Storage, kind string, name string, strVal string) er
 		}
 	default:
 		{
-			return errors.New("metric kind not supported")
+			return errMetricKindNotSupported
 		}
 	}
 	return nil

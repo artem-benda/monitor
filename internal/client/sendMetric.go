@@ -3,15 +3,11 @@ package client
 import (
 	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/go-resty/resty/v2"
 )
 
-func sendMetric(resty *resty.Client, apiURL string, kind string, name string, strVal string) error {
-	rootURL, _ := strings.CutSuffix(apiURL, "/")
-	url := fmt.Sprintf("%s/update/{metricKind}/{metricName}/{strVal}", rootURL)
-
+func sendMetric(resty *resty.Client, kind string, name string, strVal string) error {
 	resp, err := resty.R().
 		SetPathParams(map[string]string{
 			"metricKind": kind,
@@ -19,7 +15,7 @@ func sendMetric(resty *resty.Client, apiURL string, kind string, name string, st
 			"strVal":     strVal,
 		}).
 		SetBody("").
-		Post(url)
+		Post("/update/{metricKind}/{metricName}/{strVal}")
 	if err != nil {
 		return err
 	}

@@ -25,6 +25,7 @@ func TestSendAllMetrics(t *testing.T) {
 	defer srv.Close()
 	client := srv.Client()
 	resty := resty.NewWithClient(client)
-	SendAllMetrics(resty, srv.URL, metrics)
+	resty.SetBaseURL(srv.URL)
+	SendAllMetrics(resty, metrics)
 	assert.Equal(t, len(metrics), count)
 }

@@ -30,4 +30,4 @@ func (c *memCounter) Reset() {
 	c.currentValue = 0
 }
 
-var CounterStore Counter = &memCounter{}
+var CounterStore Counter = &memCounter{0, &sync.RWMutex{}}

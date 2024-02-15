@@ -1,31 +1,49 @@
 package storage
 
-import "github.com/artem-benda/monitor/internal/model"
+import (
+	"sync"
+
+	"github.com/artem-benda/monitor/internal/model"
+)
 
 type memStorage struct {
 	values map[model.Metric]any
+	rw     *sync.RWMutex
 }
 
 func NewStorage() Storage {
-	return &memStorage{make(map[model.Metric]any)}
+	return &memStorage{make(map[model.Metric]any), &sync.RWMutex{}}
 }
 
 func (m memStorage) Get(key model.Metric) (any, bool) {
+	m.rw.RLock()
+	defer m.rw.RUnlock()
 	value, ok := m.values[key]
 	return value, ok
 }
 
 func (m *memStorage) Put(key model.Metric, value any) {
+	m.rw.Lock()
+	defer m.rw.Unlock()
 	m.values[key] = value
 }
 
 func (m *memStorage) UpdateFunc(key model.Metric, fn func(prev any) any) {
+	m.rw.Lock()
+	defer m.rw.Unlock()
 	prev := m.values[key]
 	m.values[key] = fn(prev)
 }
 
 func (m memStorage) GetAll() map[model.Metric]any {
-	return m.values
+	m.rw.RLock()
+	defer m.rw.RUnlock()
+	copy := make(map[model.Metric]any)
+	for k, v := range m.values {
+		copy[k] = v
+	}
+
+	return copy
 }
 
 var Store = NewStorage()

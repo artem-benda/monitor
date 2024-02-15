@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/artem-benda/monitor/internal/client"
+	"github.com/artem-benda/monitor/internal/client/requests"
 	"github.com/artem-benda/monitor/internal/client/service"
 	"github.com/artem-benda/monitor/internal/client/storage"
 	"github.com/artem-benda/monitor/internal/model"
@@ -28,7 +28,7 @@ func main() {
 	}()
 
 	for {
-		client.SendAllMetrics(resty, metrics)
+		requests.SendAllMetrics(resty, metrics)
 		storage.CounterStore.Reset()
 		time.Sleep(time.Duration(config.ReportInterval) * time.Second)
 	}

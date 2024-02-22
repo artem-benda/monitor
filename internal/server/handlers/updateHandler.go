@@ -5,13 +5,14 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/artem-benda/monitor/internal/logger"
 	"github.com/artem-benda/monitor/internal/model"
 	"github.com/artem-benda/monitor/internal/server/service"
 	"github.com/artem-benda/monitor/internal/server/storage"
 )
 
 func MakeUpdateHandler(store storage.Storage) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
+	handlerFunc := func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("UpdateHandler, method = %s, path = %s", r.Method, r.URL.Path)
 		w.Header().Add("Content-type", "text/plain")
 
@@ -35,6 +36,8 @@ func MakeUpdateHandler(store storage.Storage) func(w http.ResponseWriter, r *htt
 			http.Error(w, "Method unimplemented", http.StatusNotImplemented)
 		}
 	}
+
+	return logger.WithRequestLogger(handlerFunc)
 }
 
 func extractUpdatePathParams(urlPath string) (string, string, string) {

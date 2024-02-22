@@ -6,10 +6,18 @@ import (
 	"github.com/artem-benda/monitor/internal/server/handlers"
 	"github.com/artem-benda/monitor/internal/server/storage"
 	"github.com/go-chi/chi/v5"
+	"go.uber.org/zap"
 )
 
 func main() {
 	parseFlags()
+
+	if logger, err := zap.NewDevelopment(); err != nil {
+		panic(err)
+	} else {
+		defer logger.Sync()
+	}
+
 	r := newAppRouter()
 	err := http.ListenAndServe(config.Endpoint, r)
 	if err != nil {

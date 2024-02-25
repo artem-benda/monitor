@@ -28,11 +28,13 @@ func (m *memStorage) Put(key model.Metric, value any) {
 	m.values[key] = value
 }
 
-func (m *memStorage) UpdateFunc(key model.Metric, fn func(prev any) any) {
+func (m *memStorage) UpdateAndGetFunc(key model.Metric, fn func(prev any) any) any {
 	m.rw.Lock()
 	defer m.rw.Unlock()
 	prev := m.values[key]
-	m.values[key] = fn(prev)
+	next := fn(prev)
+	m.values[key] = next
+	return next
 }
 
 func (m memStorage) GetAll() map[model.Metric]any {

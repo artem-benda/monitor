@@ -30,8 +30,9 @@ func MakeUpdateJSONHandler(store storage.Storage) func(w http.ResponseWriter, r 
 			case model.GaugeKind:
 				{
 					if metrics.Value != nil {
-						service.UpdateGaugeMetric(store, metrics.ID, *metrics.Value)
+						*metrics.Value = service.UpdateAndGetGaugeMetric(store, metrics.ID, *metrics.Value)
 						w.WriteHeader(http.StatusOK)
+						easyjson.MarshalToHTTPResponseWriter(metrics, w)
 					} else {
 						http.Error(w, "Metric value not set", http.StatusBadRequest)
 					}
@@ -39,8 +40,9 @@ func MakeUpdateJSONHandler(store storage.Storage) func(w http.ResponseWriter, r 
 			case model.CounterKind:
 				{
 					if metrics.Delta != nil {
-						service.UpdateCounterMetric(store, metrics.ID, *metrics.Delta)
+						*metrics.Delta = service.UpdateAndGetCounterMetric(store, metrics.ID, *metrics.Delta)
 						w.WriteHeader(http.StatusOK)
+						easyjson.MarshalToHTTPResponseWriter(metrics, w)
 					} else {
 						http.Error(w, "Metric value not set", http.StatusBadRequest)
 					}

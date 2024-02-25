@@ -19,7 +19,6 @@ func Test_sendGaugeMetric(t *testing.T) {
 	type want struct {
 		method      string
 		contentType string
-		json        string
 	}
 	tests := []struct {
 		name   string

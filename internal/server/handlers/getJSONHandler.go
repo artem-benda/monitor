@@ -32,22 +32,18 @@ func MakeGetJSONHandler(store storage.Storage) func(w http.ResponseWriter, r *ht
 		case metrics.MType == model.GaugeKind && metrics.ID != "":
 			{
 				if floatVal, ok := service.GetGaugeMetric(store, metrics.ID); ok {
-					w.WriteHeader(http.StatusOK)
 					metrics.Value = &floatVal
-					easyjson.MarshalToHTTPResponseWriter(metrics, w)
-				} else {
-					http.Error(w, "", http.StatusNotFound)
 				}
+				w.WriteHeader(http.StatusOK)
+				easyjson.MarshalToHTTPResponseWriter(metrics, w)
 			}
 		case metrics.MType == model.CounterKind && metrics.ID != "":
 			{
 				if intVal, ok := service.GetCounterMetric(store, metrics.ID); ok {
-					w.WriteHeader(http.StatusOK)
 					metrics.Delta = &intVal
-					easyjson.MarshalToHTTPResponseWriter(metrics, w)
-				} else {
-					http.Error(w, "", http.StatusNotFound)
 				}
+				w.WriteHeader(http.StatusOK)
+				easyjson.MarshalToHTTPResponseWriter(metrics, w)
 			}
 		default:
 			{

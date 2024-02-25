@@ -27,10 +27,12 @@ func main() {
 
 func newAppRouter() *chi.Mux {
 	r := chi.NewRouter()
-	r.Post("/update/{metricType}/{metricName}/{metricValue}", handlers.MakeUpdateHandler(storage.Store))
+	r.Post("/update/{metricType}/{metricName}/{metricValue}", handlers.MakeUpdatePathHandler(storage.Store))
+	r.Post("/update/", handlers.MakeUpdateJSONHandler(storage.Store))
 	r.Route("/", func(r chi.Router) {
 		r.Get("/", handlers.MakeGetAllHandler(storage.Store))
 		r.Get("/value/{metricType}/{metricName}", handlers.MakeGetHandler(storage.Store))
+		r.Post("/value/", handlers.MakeGetJSONHandler(storage.Store))
 	})
 	return r
 }

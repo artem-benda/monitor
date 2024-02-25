@@ -18,7 +18,7 @@ func main() {
 	resty.SetBaseURL(serverEndpointURL)
 	resty.SetTimeout(30 * time.Second)
 
-	var metrics map[model.Metric]string
+	var metrics map[model.Metric]any
 
 	go func() {
 		for {

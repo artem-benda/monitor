@@ -29,13 +29,21 @@ func MakeUpdateJSONHandler(store storage.Storage) func(w http.ResponseWriter, r 
 			switch metrics.MType {
 			case model.GaugeKind:
 				{
-					service.UpdateGaugeMetric(store, metrics.ID, *metrics.Value)
-					w.WriteHeader(http.StatusOK)
+					if metrics.Value != nil {
+						service.UpdateGaugeMetric(store, metrics.ID, *metrics.Value)
+						w.WriteHeader(http.StatusOK)
+					} else {
+						http.Error(w, "Metric value not set", http.StatusBadRequest)
+					}
 				}
 			case model.CounterKind:
 				{
-					service.UpdateCounterMetric(store, metrics.ID, *metrics.Delta)
-					w.WriteHeader(http.StatusOK)
+					if metrics.Delta != nil {
+						service.UpdateCounterMetric(store, metrics.ID, *metrics.Delta)
+						w.WriteHeader(http.StatusOK)
+					} else {
+						http.Error(w, "Metric value not set", http.StatusBadRequest)
+					}
 				}
 			default:
 				http.Error(w, "Bad metric type", http.StatusBadRequest)

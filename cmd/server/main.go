@@ -10,17 +10,25 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+var store storage.Storage
+
 func main() {
 	parseFlags()
+	var err error
 
-	if err := logger.Initialize(config.LogLevel); err != nil {
+	if err = logger.Initialize(config.LogLevel); err != nil {
 		panic(err)
 	} else {
 		defer logger.Log.Sync()
 	}
 
+	store, err = storage.NewStorage(config.StoreIntervalSeconds, config.StoreFileName, config.StoreRestoreFromFile)
+	if err != nil {
+		panic(err)
+	}
+
 	r := newAppRouter()
-	err := http.ListenAndServe(config.Endpoint, r)
+	err = http.ListenAndServe(config.Endpoint, r)
 	if err != nil {
 		panic(err)
 	}
@@ -30,12 +38,12 @@ func newAppRouter() *chi.Mux {
 	r := chi.NewRouter()
 	r.Use(logger.LoggerMiddleware)
 	r.Use(gzipper.GzipMiddleware)
-	r.Post("/update/{metricType}/{metricName}/{metricValue}", handlers.MakeUpdatePathHandler(storage.Store))
-	r.Post("/update/", handlers.MakeUpdateJSONHandler(storage.Store))
+	r.Post("/update/{metricType}/{metricName}/{metricValue}", handlers.MakeUpdatePathHandler(store))
+	r.Post("/update/", handlers.MakeUpdateJSONHandler(store))
 	r.Route("/", func(r chi.Router) {
-		r.Get("/", handlers.MakeGetAllHandler(storage.Store))
-		r.Get("/value/{metricType}/{metricName}", handlers.MakeGetHandler(storage.Store))
-		r.Post("/value/", handlers.MakeGetJSONHandler(storage.Store))
+		r.Get("/", handlers.MakeGetAllHandler(store))
+		r.Get("/value/{metricType}/{metricName}", handlers.MakeGetHandler(store))
+		r.Post("/value/", handlers.MakeGetJSONHandler(store))
 	})
 	return r
 }

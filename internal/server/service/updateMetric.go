@@ -17,7 +17,10 @@ func UpdateMetric(s storage.Storage, kind string, name string, strVal string) er
 	case model.CounterKind:
 		{
 			if value, err := strconv.ParseInt(strVal, 10, 64); err == nil {
-				UpdateAndGetCounterMetric(s, name, value)
+				_, err := UpdateAndGetCounterMetric(s, name, value)
+				if err != nil {
+					return err
+				}
 			} else {
 				return err
 			}
@@ -25,7 +28,10 @@ func UpdateMetric(s storage.Storage, kind string, name string, strVal string) er
 	case model.GaugeKind:
 		{
 			if value, err := strconv.ParseFloat(strVal, 64); err == nil {
-				UpdateAndGetGaugeMetric(s, name, value)
+				_, err := UpdateAndGetGaugeMetric(s, name, value)
+				if err != nil {
+					return err
+				}
 			} else {
 				return err
 			}
@@ -38,19 +44,19 @@ func UpdateMetric(s storage.Storage, kind string, name string, strVal string) er
 	return nil
 }
 
-func UpdateAndGetGaugeMetric(s storage.Storage, name string, value float64) float64 {
+func UpdateAndGetGaugeMetric(s storage.Storage, name string, value float64) (float64, error) {
 	key := model.Metric{Kind: model.GaugeKind, Name: name}
-	s.Put(key, value)
-	return value
+	err := s.Put(key, value)
+	return value, err
 }
 
-func UpdateAndGetCounterMetric(s storage.Storage, name string, value int64) int64 {
+func UpdateAndGetCounterMetric(s storage.Storage, name string, value int64) (int64, error) {
 	key := model.Metric{Kind: model.CounterKind, Name: name}
-	next := s.UpdateAndGetFunc(key, func(prev any) any {
+	next, err := s.UpdateAndGetFunc(key, func(prev any) any {
 		if prevInt, ok := prev.(int64); ok {
 			return prevInt + int64(value)
 		}
 		return value
 	})
-	return next.(int64)
+	return next.(int64), err
 }

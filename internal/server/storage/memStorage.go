@@ -18,7 +18,7 @@ type memStorage struct {
 }
 
 func NewStorage(saveIntervalSec int, filename string, restore bool) (Storage, error) {
-	var metrics map[model.Metric]any = make(map[model.Metric]any)
+	var metrics = make(map[model.Metric]any)
 	var savedMetrics []model.SaveableMetricValue
 	if restore {
 		if _, err := os.Stat(filename); !errors.Is(err, os.ErrNotExist) {

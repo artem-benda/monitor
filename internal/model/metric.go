@@ -10,7 +10,7 @@ const (
 	CounterKind = "counter"
 )
 
-var InvalidMetricValueError = errors.New("InvalidMetricValueError")
+var ErrInvalidMetricValue = errors.New("InvalidMetricValueError")
 
 type Metric struct {
 	Kind string `json:"kind"`
@@ -77,5 +77,5 @@ func AsSaveableMetric(metric Metric, val any) (SaveableMetricValue, error) {
 	if floatVal, ok := val.(float64); ok {
 		return SaveableMetricValue{metric.Kind, metric.Name, 0, floatVal}, nil
 	}
-	return SaveableMetricValue{}, InvalidMetricValueError
+	return SaveableMetricValue{}, ErrInvalidMetricValue
 }

@@ -2,17 +2,14 @@ package handlers
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 
-	"github.com/artem-benda/monitor/internal/logger"
 	"github.com/artem-benda/monitor/internal/server/service"
 	"github.com/artem-benda/monitor/internal/server/storage"
 )
 
-func MakeGetAllHandler(store storage.Storage) func(w http.ResponseWriter, r *http.Request) {
-	handlerFunc := func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("GetHandler, method = %s, path = %s", r.Method, r.URL.Path)
+func MakeGetAllHandler(store storage.Storage) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-type", "text/html")
 		for metricKey, strVal := range service.GetAllMetrics(store) {
 			w.Write([]byte("<p>"))
@@ -20,6 +17,4 @@ func MakeGetAllHandler(store storage.Storage) func(w http.ResponseWriter, r *htt
 			w.Write([]byte("</p>"))
 		}
 	}
-
-	return logger.WithRequestLogger(handlerFunc)
 }

@@ -3,19 +3,19 @@ package main
 import (
 	"net/http"
 
+	"github.com/artem-benda/monitor/internal/logger"
 	"github.com/artem-benda/monitor/internal/server/handlers"
 	"github.com/artem-benda/monitor/internal/server/storage"
 	"github.com/go-chi/chi/v5"
-	"go.uber.org/zap"
 )
 
 func main() {
 	parseFlags()
 
-	if logger, err := zap.NewDevelopment(); err != nil {
+	if err := logger.Initialize(config.LogLevel); err != nil {
 		panic(err)
 	} else {
-		defer logger.Sync()
+		defer logger.Log.Sync()
 	}
 
 	r := newAppRouter()
@@ -27,6 +27,7 @@ func main() {
 
 func newAppRouter() *chi.Mux {
 	r := chi.NewRouter()
+	r.Use(logger.LoggerMiddleware)
 	r.Post("/update/{metricType}/{metricName}/{metricValue}", handlers.MakeUpdatePathHandler(storage.Store))
 	r.Post("/update/", handlers.MakeUpdateJSONHandler(storage.Store))
 	r.Route("/", func(r chi.Router) {

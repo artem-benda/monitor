@@ -9,7 +9,7 @@ import (
 
 var Log *zap.Logger = zap.NewNop()
 
-func Initializa(level string) error {
+func Initialize(level string) error {
 	lvl, err := zap.ParseAtomicLevel(level)
 	if err != nil {
 		return err
@@ -29,8 +29,8 @@ func Initializa(level string) error {
 	return nil
 }
 
-// RequestLogger — middleware-логер для входящих HTTP-запросов.
-func WithRequestLogger(h http.HandlerFunc) http.HandlerFunc {
+// LoggerMiddleware — middleware-логер для входящих HTTP-запросов.
+func LoggerMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 
@@ -43,7 +43,7 @@ func WithRequestLogger(h http.HandlerFunc) http.HandlerFunc {
 			responseData:   responseData,
 		}
 
-		h(&lw, r)
+		next.ServeHTTP(&lw, r)
 
 		duration := time.Since(start)
 

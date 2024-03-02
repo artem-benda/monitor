@@ -7,12 +7,20 @@ import (
 	"github.com/artem-benda/monitor/internal/client/requests"
 	"github.com/artem-benda/monitor/internal/client/service"
 	"github.com/artem-benda/monitor/internal/client/storage"
+	"github.com/artem-benda/monitor/internal/logger"
 	"github.com/artem-benda/monitor/internal/model"
 	"github.com/go-resty/resty/v2"
 )
 
 func main() {
 	parseFlags()
+
+	if err := logger.Initialize(config.LogLevel); err != nil {
+		panic(err)
+	} else {
+		defer logger.Log.Sync()
+	}
+
 	resty := resty.New()
 	serverEndpointURL := fmt.Sprintf("http://%s", config.ServerEndpoint)
 	resty.SetBaseURL(serverEndpointURL)

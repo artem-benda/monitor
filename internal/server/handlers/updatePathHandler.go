@@ -1,19 +1,16 @@
 package handlers
 
 import (
-	"log"
 	"net/http"
 	"strings"
 
-	"github.com/artem-benda/monitor/internal/logger"
 	"github.com/artem-benda/monitor/internal/model"
 	"github.com/artem-benda/monitor/internal/server/service"
 	"github.com/artem-benda/monitor/internal/server/storage"
 )
 
-func MakeUpdatePathHandler(store storage.Storage) func(w http.ResponseWriter, r *http.Request) {
-	handlerFunc := func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("UpdateHandler, method = %s, path = %s", r.Method, r.URL.Path)
+func MakeUpdatePathHandler(store storage.Storage) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-type", "text/plain")
 
 		switch metricKind, metricName, strVal := extractUpdatePathParams(r.URL.Path); {
@@ -36,15 +33,12 @@ func MakeUpdatePathHandler(store storage.Storage) func(w http.ResponseWriter, r 
 			http.Error(w, "Method unimplemented", http.StatusNotImplemented)
 		}
 	}
-
-	return logger.WithRequestLogger(handlerFunc)
 }
 
 func extractUpdatePathParams(urlPath string) (string, string, string) {
 	var metricKind, metricName, strVal string
 
 	params := strings.Split(strings.TrimPrefix(urlPath, "/update/"), "/")
-	log.Printf("params: %s", params)
 
 	switch {
 	case len(params) >= 3:

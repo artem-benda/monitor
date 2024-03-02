@@ -1,26 +1,21 @@
 package handlers
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/artem-benda/monitor/internal/dto"
-	"github.com/artem-benda/monitor/internal/logger"
 	"github.com/artem-benda/monitor/internal/model"
 	"github.com/artem-benda/monitor/internal/server/service"
 	"github.com/artem-benda/monitor/internal/server/storage"
 	"github.com/mailru/easyjson"
-	"go.uber.org/zap"
 )
 
-func MakeGetJSONHandler(store storage.Storage) func(w http.ResponseWriter, r *http.Request) {
-	handlerFunc := func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("GetJSONHandler, method = %s, path = %s", r.Method, r.URL.Path)
+func MakeGetJSONHandler(store storage.Storage) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-type", "application/json")
 
 		metrics := &dto.Metrics{}
 		if err := easyjson.UnmarshalFromReader(r.Body, metrics); err != nil {
-			logger.Log.Info("Error parsing request body", zap.Error(err))
 			http.Error(w, "Error parsing request body", http.StatusBadRequest)
 		}
 
@@ -55,6 +50,4 @@ func MakeGetJSONHandler(store storage.Storage) func(w http.ResponseWriter, r *ht
 			}
 		}
 	}
-
-	return logger.WithRequestLogger(handlerFunc)
 }

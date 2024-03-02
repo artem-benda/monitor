@@ -21,10 +21,11 @@ func main() {
 		defer logger.Log.Sync()
 	}
 
-	resty := resty.New()
+	client := resty.New()
 	serverEndpointURL := fmt.Sprintf("http://%s", config.ServerEndpoint)
-	resty.SetBaseURL(serverEndpointURL)
-	resty.SetTimeout(30 * time.Second)
+	client.SetBaseURL(serverEndpointURL)
+	client.SetTimeout(30 * time.Second)
+	client.OnAfterResponse(logger.NewRestyResponseLogger())
 
 	var metrics map[model.Metric]any
 
@@ -36,7 +37,7 @@ func main() {
 	}()
 
 	for {
-		requests.SendAllMetrics(resty, metrics)
+		requests.SendAllMetrics(client, metrics)
 		storage.CounterStore.Reset()
 		time.Sleep(time.Duration(config.ReportInterval) * time.Second)
 	}

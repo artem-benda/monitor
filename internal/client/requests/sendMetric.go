@@ -1,6 +1,8 @@
 package requests
 
 import (
+	"bytes"
+	"compress/gzip"
 	"fmt"
 	"net/http"
 
@@ -9,8 +11,26 @@ import (
 )
 
 func sendMetric(resty *resty.Client, dto dto.Metrics) error {
+	var (
+		json []byte
+		err  error
+	)
+
+	if json, err = resty.JSONMarshal(dto); err != nil {
+		return err
+	}
+
+	var b bytes.Buffer
+	w := gzip.NewWriter(&b)
+	if _, err := w.Write(json); err != nil {
+		return err
+	}
+	w.Close()
+
 	resp, err := resty.R().
-		SetBody(dto).
+		SetBody(b.Bytes()).
+		SetHeader("Content-Encoding", "gzip").
+		SetHeader("Content-Type", "application/json").
 		Post("/update/")
 	if err != nil {
 		return err

@@ -4,12 +4,13 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/go-resty/resty/v2"
 	"go.uber.org/zap"
 )
 
 var Log *zap.Logger = zap.NewNop()
 
-func Initializa(level string) error {
+func Initialize(level string) error {
 	lvl, err := zap.ParseAtomicLevel(level)
 	if err != nil {
 		return err
@@ -29,8 +30,8 @@ func Initializa(level string) error {
 	return nil
 }
 
-// RequestLogger — middleware-логер для входящих HTTP-запросов.
-func WithRequestLogger(h http.HandlerFunc) http.HandlerFunc {
+// LoggerMiddleware — middleware-логер для входящих HTTP-запросов.
+func LoggerMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 
@@ -43,18 +44,32 @@ func WithRequestLogger(h http.HandlerFunc) http.HandlerFunc {
 			responseData:   responseData,
 		}
 
-		h(&lw, r)
+		next.ServeHTTP(&lw, r)
 
 		duration := time.Since(start)
 
-		Log.Debug("request",
+		Log.Debug("server: client request",
 			zap.String("method", r.Method),
 			zap.String("path", r.URL.Path),
+			zap.String("encoding", r.Header.Get("Content-Encoding")),
+			zap.String("clientAccepts", r.Header.Get("Accept-Encoding")),
 			zap.Duration("duration", duration),
 			zap.Int("statusCode", responseData.statusCode),
 			zap.Int64("responseSizeBytes", responseData.sizeBytes),
 		)
 	})
+}
+
+func NewRestyResponseLogger() func(c *resty.Client, r *resty.Response) error {
+	return func(c *resty.Client, r *resty.Response) error {
+		Log.Debug("resty: server response",
+			zap.String("method", r.Request.Method),
+			zap.String("URL", r.Request.URL),
+			zap.String("status", r.Status()),
+			zap.Int64("responseSizeBytes", r.Size()),
+		)
+		return nil
+	}
 }
 
 type responseData struct {

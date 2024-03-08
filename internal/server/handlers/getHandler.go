@@ -1,19 +1,16 @@
 package handlers
 
 import (
-	"log"
 	"net/http"
 
-	"github.com/artem-benda/monitor/internal/logger"
 	"github.com/artem-benda/monitor/internal/model"
 	"github.com/artem-benda/monitor/internal/server/service"
 	"github.com/artem-benda/monitor/internal/server/storage"
 	"github.com/go-chi/chi/v5"
 )
 
-func MakeGetHandler(store storage.Storage) func(w http.ResponseWriter, r *http.Request) {
-	handlerFunc := func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("GetHandler, method = %s, path = %s", r.Method, r.URL.Path)
+func MakeGetHandler(store storage.Storage) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-type", "text/plain")
 		metricType, metricName := chi.URLParam(r, "metricType"), chi.URLParam(r, "metricName")
 		switch {
@@ -36,6 +33,4 @@ func MakeGetHandler(store storage.Storage) func(w http.ResponseWriter, r *http.R
 			}
 		}
 	}
-
-	return logger.WithRequestLogger(handlerFunc)
 }

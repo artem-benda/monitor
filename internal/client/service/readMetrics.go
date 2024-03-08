@@ -3,7 +3,6 @@ package service
 import (
 	"math/rand"
 	"runtime"
-	"strconv"
 
 	"github.com/artem-benda/monitor/internal/client/storage"
 	"github.com/artem-benda/monitor/internal/model"
@@ -41,42 +40,42 @@ var (
 	randomValueMetric   = model.NewGaugeMetric("RandomValue")
 )
 
-func ReadMetrics(counter storage.Counter) map[model.Metric]string {
+func ReadMetrics(counter storage.Counter) map[model.Metric]any {
 	var stats runtime.MemStats
 	runtime.ReadMemStats(&stats)
 
-	m := make(map[model.Metric]string)
+	m := make(map[model.Metric]any)
 
-	m[allocMetric] = strconv.FormatUint(stats.Alloc, 10)
-	m[buckHashSysMetric] = strconv.FormatUint(stats.BuckHashSys, 10)
-	m[freesMetric] = strconv.FormatUint(stats.Frees, 10)
-	m[gccpuFractionMetric] = strconv.FormatFloat(stats.GCCPUFraction, 'f', -1, 64)
-	m[gcSysMetric] = strconv.FormatUint(stats.GCSys, 10)
-	m[heapAllocMetric] = strconv.FormatUint(stats.HeapAlloc, 10)
-	m[heapIdleMetric] = strconv.FormatUint(stats.HeapIdle, 10)
-	m[heapInuseMetric] = strconv.FormatUint(stats.HeapInuse, 10)
-	m[heapObjectsMetric] = strconv.FormatUint(stats.HeapObjects, 10)
-	m[heapReleasedMetric] = strconv.FormatUint(stats.HeapReleased, 10)
-	m[heapSysMetric] = strconv.FormatUint(stats.HeapSys, 10)
-	m[lastGCMetric] = strconv.FormatUint(stats.LastGC, 10)
-	m[lookupsMetric] = strconv.FormatUint(stats.Lookups, 10)
-	m[mCacheInuseMetric] = strconv.FormatUint(stats.MCacheInuse, 10)
-	m[mCacheSysMetric] = strconv.FormatUint(stats.MCacheSys, 10)
-	m[mSpanInuseMetric] = strconv.FormatUint(stats.MSpanInuse, 10)
-	m[mSpanSysMetric] = strconv.FormatUint(stats.MSpanSys, 10)
-	m[mallocsMetric] = strconv.FormatUint(stats.Mallocs, 10)
-	m[nextGCMetric] = strconv.FormatUint(stats.NextGC, 10)
-	m[numForcedGCMetric] = strconv.FormatUint(uint64(stats.NumForcedGC), 10)
-	m[numGCMetric] = strconv.FormatUint(uint64(stats.NumGC), 10)
-	m[otherSysMetric] = strconv.FormatUint(stats.OtherSys, 10)
-	m[pauseTotalNsMetric] = strconv.FormatUint(stats.PauseTotalNs, 10)
-	m[stackInuseMetric] = strconv.FormatUint(stats.StackInuse, 10)
-	m[stackSysMetric] = strconv.FormatUint(stats.StackSys, 10)
-	m[sysMetric] = strconv.FormatUint(stats.Sys, 10)
-	m[totalAllocMetric] = strconv.FormatUint(stats.TotalAlloc, 10)
+	m[allocMetric] = float64(stats.Alloc)
+	m[buckHashSysMetric] = float64(stats.BuckHashSys)
+	m[freesMetric] = float64(stats.Frees)
+	m[gccpuFractionMetric] = stats.GCCPUFraction
+	m[gcSysMetric] = float64(stats.GCSys)
+	m[heapAllocMetric] = float64(stats.HeapAlloc)
+	m[heapIdleMetric] = float64(stats.HeapIdle)
+	m[heapInuseMetric] = float64(stats.HeapInuse)
+	m[heapObjectsMetric] = float64(stats.HeapObjects)
+	m[heapReleasedMetric] = float64(stats.HeapReleased)
+	m[heapSysMetric] = float64(stats.HeapSys)
+	m[lastGCMetric] = float64(stats.LastGC)
+	m[lookupsMetric] = float64(stats.Lookups)
+	m[mCacheInuseMetric] = float64(stats.MCacheInuse)
+	m[mCacheSysMetric] = float64(stats.MCacheSys)
+	m[mSpanInuseMetric] = float64(stats.MSpanInuse)
+	m[mSpanSysMetric] = float64(stats.MSpanSys)
+	m[mallocsMetric] = float64(stats.Mallocs)
+	m[nextGCMetric] = float64(stats.NextGC)
+	m[numForcedGCMetric] = float64(stats.NumForcedGC)
+	m[numGCMetric] = float64(stats.NumGC)
+	m[otherSysMetric] = float64(stats.OtherSys)
+	m[pauseTotalNsMetric] = float64(stats.PauseTotalNs)
+	m[stackInuseMetric] = float64(stats.StackInuse)
+	m[stackSysMetric] = float64(stats.StackSys)
+	m[sysMetric] = float64(stats.Sys)
+	m[totalAllocMetric] = float64(stats.TotalAlloc)
 
-	m[pollCountMetric] = strconv.FormatUint(counter.IncrementAndGet(), 10)
-	m[randomValueMetric] = strconv.FormatUint(rand.Uint64(), 10)
+	m[pollCountMetric] = int64(counter.IncrementAndGet())
+	m[randomValueMetric] = float64(rand.Int63())
 
 	return m
 }

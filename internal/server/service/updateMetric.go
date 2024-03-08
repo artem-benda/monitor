@@ -9,7 +9,6 @@ import (
 )
 
 var (
-	errIllegalArgument        = errors.New("illegal argument")
 	errMetricKindNotSupported = errors.New("metric kind not supported")
 )
 
@@ -18,16 +17,7 @@ func UpdateMetric(s storage.Storage, kind string, name string, strVal string) er
 	case model.CounterKind:
 		{
 			if value, err := strconv.ParseInt(strVal, 10, 64); err == nil {
-				key := model.Metric{Kind: kind, Name: name}
-				s.UpdateFunc(key, func(prev any) any {
-					if prevInt, ok := prev.(int64); ok {
-						return prevInt + int64(value)
-					} else if prev == nil {
-						return value
-					} else {
-						return errIllegalArgument
-					}
-				})
+				UpdateAndGetCounterMetric(s, name, value)
 			} else {
 				return err
 			}
@@ -35,8 +25,7 @@ func UpdateMetric(s storage.Storage, kind string, name string, strVal string) er
 	case model.GaugeKind:
 		{
 			if value, err := strconv.ParseFloat(strVal, 64); err == nil {
-				key := model.Metric{Kind: kind, Name: name}
-				s.Put(key, value)
+				UpdateAndGetGaugeMetric(s, name, value)
 			} else {
 				return err
 			}
@@ -47,4 +36,21 @@ func UpdateMetric(s storage.Storage, kind string, name string, strVal string) er
 		}
 	}
 	return nil
+}
+
+func UpdateAndGetGaugeMetric(s storage.Storage, name string, value float64) float64 {
+	key := model.Metric{Kind: model.GaugeKind, Name: name}
+	s.Put(key, value)
+	return value
+}
+
+func UpdateAndGetCounterMetric(s storage.Storage, name string, value int64) int64 {
+	key := model.Metric{Kind: model.CounterKind, Name: name}
+	next := s.UpdateAndGetFunc(key, func(prev any) any {
+		if prevInt, ok := prev.(int64); ok {
+			return prevInt + int64(value)
+		}
+		return value
+	})
+	return next.(int64)
 }

@@ -11,7 +11,7 @@ import (
 	"github.com/artem-benda/monitor/internal/server/storage"
 )
 
-func MakeUpdateHandler(store storage.Storage) func(w http.ResponseWriter, r *http.Request) {
+func MakeUpdatePathHandler(store storage.Storage) func(w http.ResponseWriter, r *http.Request) {
 	handlerFunc := func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("UpdateHandler, method = %s, path = %s", r.Method, r.URL.Path)
 		w.Header().Add("Content-type", "text/plain")

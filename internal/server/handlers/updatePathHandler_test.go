@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestMakeUpdateHandler(t *testing.T) {
+func TestMakeUpdatePathHandler(t *testing.T) {
 	type want struct {
 		code        int
 		response    string
@@ -108,7 +108,7 @@ func TestMakeUpdateHandler(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			// Для каждого теста нужно новое хранилище, чтобы результаты не зависили от порядка выполнения
 			store := storage.NewStorage()
-			handler := MakeUpdateHandler(store)
+			handler := MakeUpdatePathHandler(store)
 
 			request := httptest.NewRequest(http.MethodPost, test.requestPath, nil)
 			// создаём новый Recorder

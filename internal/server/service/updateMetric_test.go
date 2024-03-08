@@ -61,7 +61,8 @@ func TestUpdateMetric(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			store := storage.NewStorage()
+			store, err := storage.NewStorage(0, "test.txt", false)
+			assert.NoError(t, err, "Error creating store for test")
 			for _, metric := range tt.metrics {
 				err := UpdateMetric(store, metric.kind, metric.name, metric.strVal)
 				if tt.wantErr {

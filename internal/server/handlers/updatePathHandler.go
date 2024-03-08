@@ -15,7 +15,7 @@ func MakeUpdatePathHandler(store storage.Storage) http.HandlerFunc {
 
 		switch metricKind, metricName, strVal := extractUpdatePathParams(r.URL.Path); {
 		case model.ValidMetricKind(metricKind) && metricKind != "" && metricName != "":
-			if err := service.UpdateMetric(storage.Store, metricKind, metricName, strVal); err == nil {
+			if err := service.UpdateMetric(store, metricKind, metricName, strVal); err == nil {
 				w.WriteHeader(http.StatusOK)
 			} else {
 				http.Error(w, "Bad metric value", http.StatusBadRequest)

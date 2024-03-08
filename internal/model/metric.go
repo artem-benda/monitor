@@ -1,15 +1,20 @@
 package model
 
-import "strconv"
+import (
+	"errors"
+	"strconv"
+)
 
 const (
 	GaugeKind   = "gauge"
 	CounterKind = "counter"
 )
 
+var ErrInvalidMetricValue = errors.New("InvalidMetricValueError")
+
 type Metric struct {
-	Kind string
-	Name string
+	Kind string `json:"kind"`
+	Name string `json:"name"`
 }
 
 func ValidMetricKind(s string) bool {
@@ -56,4 +61,21 @@ func AsCounterMetric(metric Metric, val any) (int64, bool) {
 		return intVal, true
 	}
 	return 0, false
+}
+
+type SaveableMetricValue struct {
+	Kind         string  `json:"kind"`
+	Name         string  `json:"name"`
+	Int64Value   int64   `json:"intVal,omitempty"`
+	Float64Value float64 `json:"floatVal,omitempty"`
+}
+
+func AsSaveableMetric(metric Metric, val any) (SaveableMetricValue, error) {
+	if intVal, ok := val.(int64); ok {
+		return SaveableMetricValue{metric.Kind, metric.Name, intVal, 0}, nil
+	}
+	if floatVal, ok := val.(float64); ok {
+		return SaveableMetricValue{metric.Kind, metric.Name, 0, floatVal}, nil
+	}
+	return SaveableMetricValue{}, ErrInvalidMetricValue
 }

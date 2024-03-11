@@ -25,6 +25,7 @@ func main() {
 	}
 
 	dbpool = newConnectionPool(config.DatabaseDSN)
+	defer dbpool.Close()
 
 	store, err = storage.NewStorage(config.StoreIntervalSeconds, config.StoreFileName, config.StoreRestoreFromFile)
 	if err != nil {

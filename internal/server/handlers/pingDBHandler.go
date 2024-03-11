@@ -14,9 +14,9 @@ func MakePingDatabaseHandler(dbpool *pgxpool.Pool) http.HandlerFunc {
 			return
 		}
 
-		var i int
-		err := dbpool.QueryRow(context.Background(), "SELECT 1").Scan(&i)
-		if i == 1 && err != nil {
+		var ping string
+		err := dbpool.QueryRow(context.Background(), "SELECT 'ping'").Scan(&ping)
+		if err != nil && ping == "ping" {
 			w.WriteHeader(http.StatusOK)
 		} else {
 			w.WriteHeader(http.StatusInternalServerError)

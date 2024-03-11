@@ -8,9 +8,11 @@ import (
 	"github.com/artem-benda/monitor/internal/server/handlers"
 	"github.com/artem-benda/monitor/internal/server/storage"
 	"github.com/go-chi/chi/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 var store storage.Storage
+var dbpool *pgxpool.Pool
 
 func main() {
 	parseFlags()
@@ -20,6 +22,10 @@ func main() {
 		panic(err)
 	} else {
 		defer logger.Log.Sync()
+	}
+
+	if config.DatabaseDSN != "" {
+		dbpool = newConnectionPool(config.DatabaseDSN)
 	}
 
 	store, err = storage.NewStorage(config.StoreIntervalSeconds, config.StoreFileName, config.StoreRestoreFromFile)
@@ -45,5 +51,6 @@ func newAppRouter() *chi.Mux {
 		r.Get("/value/{metricType}/{metricName}", handlers.MakeGetHandler(store))
 		r.Post("/value/", handlers.MakeGetJSONHandler(store))
 	})
+	r.Get("/ping/", handlers.MakePingDatabaseHandler(dbpool))
 	return r
 }

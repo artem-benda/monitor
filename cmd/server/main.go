@@ -24,9 +24,7 @@ func main() {
 		defer logger.Log.Sync()
 	}
 
-	if config.DatabaseDSN != "" {
-		dbpool = newConnectionPool(config.DatabaseDSN)
-	}
+	dbpool = newConnectionPool(config.DatabaseDSN)
 
 	store, err = storage.NewStorage(config.StoreIntervalSeconds, config.StoreFileName, config.StoreRestoreFromFile)
 	if err != nil {

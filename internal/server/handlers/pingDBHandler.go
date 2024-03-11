@@ -6,6 +6,7 @@ import (
 
 	"github.com/artem-benda/monitor/internal/logger"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"go.uber.org/zap"
 )
 
 func MakePingDatabaseHandler(dbpool *pgxpool.Pool) http.HandlerFunc {
@@ -16,7 +17,7 @@ func MakePingDatabaseHandler(dbpool *pgxpool.Pool) http.HandlerFunc {
 			logger.Log.Debug("Executed ping command successfully")
 			w.WriteHeader(http.StatusOK)
 		} else {
-			logger.Log.Debug("Executed ping command with error")
+			logger.Log.Debug("Executed ping command with error", zap.Error(err))
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 	}

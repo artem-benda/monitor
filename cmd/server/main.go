@@ -48,9 +48,9 @@ func newAppRouter() *chi.Mux {
 	r.Post("/update/", handlers.MakeUpdateJSONHandler(store))
 	r.Route("/", func(r chi.Router) {
 		r.Get("/", handlers.MakeGetAllHandler(store))
+		r.Get("/ping", handlers.MakePingDatabaseHandler(dbpool))
 		r.Get("/value/{metricType}/{metricName}", handlers.MakeGetHandler(store))
 		r.Post("/value/", handlers.MakeGetJSONHandler(store))
-		r.Get("/ping/", handlers.MakePingDatabaseHandler(dbpool))
 	})
 	return r
 }

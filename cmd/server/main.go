@@ -50,7 +50,7 @@ func newAppRouter() *chi.Mux {
 		r.Get("/", handlers.MakeGetAllHandler(store))
 		r.Get("/value/{metricType}/{metricName}", handlers.MakeGetHandler(store))
 		r.Post("/value/", handlers.MakeGetJSONHandler(store))
+		r.Get("/ping/", handlers.MakePingDatabaseHandler(dbpool))
 	})
-	r.Get("/ping/", handlers.MakePingDatabaseHandler(dbpool))
 	return r
 }

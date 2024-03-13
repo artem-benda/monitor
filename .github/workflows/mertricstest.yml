@@ -24,7 +24,6 @@ jobs:
     services:
       postgres:
         image: postgres
-        restart: always
         volumes:
           - pg_project:/var/lib/postgresql/data
         ports:

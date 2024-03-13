@@ -28,6 +28,9 @@ jobs:
           POSTGRES_USER: pguser
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: praktikum
+        ports:
+          # Maps tcp port 5432 on service container to the host
+          - 5432:5432
         options: >-
           --health-cmd pg_isready
           --health-interval 5s

@@ -14,7 +14,7 @@ type dbStorage struct {
 	dbpool *pgxpool.Pool
 }
 
-func NewDbStorage(dbpool *pgxpool.Pool) Storage {
+func NewDBStorage(dbpool *pgxpool.Pool) Storage {
 	return dbStorage{dbpool: dbpool}
 }
 
@@ -59,9 +59,7 @@ func (s dbStorage) UpsertGauge(ctx context.Context, key model.MetricKey, value m
 		return errInvaligArgument
 	}
 
-	var gauge sql.NullFloat64
-
-	gauge = sql.NullFloat64{Float64: value.Gauge}
+	gauge := sql.NullFloat64{Float64: value.Gauge}
 
 	upsertMetricQuery := "INSERT INTO metrics(mtype, mname, gauge) VALUES ($1, $2, $3) " +
 		"ON CONFLICS (mtype, mname) DO UPDATE SET gauge = EXCLUDED.gauge"

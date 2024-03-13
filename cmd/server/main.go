@@ -29,11 +29,13 @@ func main() {
 		dbpool = newConnectionPool(config.DatabaseDSN)
 		initDB(dbpool)
 		defer dbpool.Close()
-	}
 
-	store, err = storage.NewMemStorage(config.StoreIntervalSeconds, config.StoreFileName, config.StoreRestoreFromFile)
-	if err != nil {
-		panic(err)
+		store = storage.NewDBStorage(dbpool)
+	} else {
+		store, err = storage.NewMemStorage(config.StoreIntervalSeconds, config.StoreFileName, config.StoreRestoreFromFile)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	r := newAppRouter()

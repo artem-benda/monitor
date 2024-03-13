@@ -11,11 +11,11 @@ import (
 )
 
 func TestSendAllMetrics(t *testing.T) {
-	metrics := map[model.Metric]any{
-		{Kind: "gauge", Name: "test1"}:   float64(453.223),
-		{Kind: "gauge", Name: "test2"}:   float64(1.554),
-		{Kind: "counter", Name: "test3"}: int64(3),
-		{Kind: "counter", Name: "test4"}: int64(5),
+	metrics := map[model.MetricKey]model.MetricValue{
+		{Kind: "gauge", Name: "test1"}:   model.MetricValue{Gauge: float64(453.223)},
+		{Kind: "gauge", Name: "test2"}:   model.MetricValue{Gauge: float64(1.554)},
+		{Kind: "counter", Name: "test3"}: model.MetricValue{Counter: int64(3)},
+		{Kind: "counter", Name: "test4"}: model.MetricValue{Counter: int64(5)},
 	}
 	var count int
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

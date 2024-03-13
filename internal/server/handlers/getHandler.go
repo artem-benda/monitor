@@ -16,20 +16,22 @@ func MakeGetHandler(store storage.Storage) http.HandlerFunc {
 		switch {
 		case !model.ValidMetricKind(metricType):
 			{
-				http.Error(w, "Metric type not supported", http.StatusBadRequest)
+				w.WriteHeader(http.StatusBadRequest)
 			}
 		case model.ValidMetricKind(metricType) && metricName != "":
 			{
-				if strVal, ok := service.GetMetric(store, metricType, metricName); ok {
+				if strVal, ok, err := service.GetMetric(r.Context(), store, metricType, metricName); err != nil {
+					w.WriteHeader(http.StatusInternalServerError)
+				} else if ok {
 					w.WriteHeader(http.StatusOK)
 					w.Write([]byte(strVal))
 				} else {
-					http.Error(w, "", http.StatusNotFound)
+					w.WriteHeader(http.StatusNotFound)
 				}
 			}
 		default:
 			{
-				http.Error(w, "", http.StatusNotFound)
+				w.WriteHeader(http.StatusNotFound)
 			}
 		}
 	}

@@ -15,22 +15,22 @@ func MakeUpdatePathHandler(store storage.Storage) http.HandlerFunc {
 
 		switch metricKind, metricName, strVal := extractUpdatePathParams(r.URL.Path); {
 		case model.ValidMetricKind(metricKind) && metricKind != "" && metricName != "":
-			if err := service.UpdateMetric(store, metricKind, metricName, strVal); err == nil {
+			if err := service.UpdateMetric(r.Context(), store, metricKind, metricName, strVal); err == nil {
 				w.WriteHeader(http.StatusOK)
 			} else {
-				http.Error(w, "Bad metric value", http.StatusBadRequest)
+				w.WriteHeader(http.StatusBadRequest)
 			}
 		case r.Method != http.MethodPost:
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			w.WriteHeader(http.StatusMethodNotAllowed)
 		case !model.ValidMetricKind(metricKind):
-			http.Error(w, "Metric type not supported", http.StatusBadRequest)
+			w.WriteHeader(http.StatusBadRequest)
 		case metricName == "":
-			http.Error(w, "Metric name cannot be empty", http.StatusNotFound)
+			w.WriteHeader(http.StatusNotFound)
 		case strVal == "":
-			http.Error(w, "Invalid parameters values", http.StatusUnprocessableEntity)
+			w.WriteHeader(http.StatusUnprocessableEntity)
 
 		default:
-			http.Error(w, "Method unimplemented", http.StatusNotImplemented)
+			w.WriteHeader(http.StatusNotImplemented)
 		}
 	}
 }

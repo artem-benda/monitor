@@ -12,7 +12,12 @@ func MakeGetAllHandler(store storage.Storage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-type", "text/html")
 		w.WriteHeader(http.StatusOK)
-		for metricKey, strVal := range service.GetAllMetrics(store) {
+		metrics, err := service.GetAllMetrics(r.Context(), store)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		for metricKey, strVal := range metrics {
 			w.Write([]byte("<p>"))
 			w.Write([]byte(fmt.Sprintf("%s: %s", metricKey.Name, strVal)))
 			w.Write([]byte("</p>"))

@@ -12,70 +12,51 @@ const (
 
 var ErrInvalidMetricValue = errors.New("InvalidMetricValueError")
 
-type Metric struct {
-	Kind string `json:"kind"`
-	Name string `json:"name"`
+type MetricKey struct {
+	Kind string
+	Name string
+}
+
+type MetricValue struct {
+	Gauge   float64
+	Counter int64
 }
 
 func ValidMetricKind(s string) bool {
 	return s == GaugeKind || s == CounterKind
 }
 
-func NewGaugeMetric(name string) Metric {
-	return Metric{Kind: GaugeKind, Name: name}
+func NewGaugeMetricKey(name string) MetricKey {
+	return MetricKey{Kind: GaugeKind, Name: name}
 }
 
-func NewCounterMetric(name string) Metric {
-	return Metric{Kind: CounterKind, Name: name}
+func NewCounterMetricKey(name string) MetricKey {
+	return MetricKey{Kind: CounterKind, Name: name}
 }
 
-func StringValue(metric Metric, val any) (string, bool) {
-	switch metric.Kind {
+func StringValue(metricKey MetricKey, val MetricValue) (string, error) {
+	switch metricKey.Kind {
 	case CounterKind:
 		{
-			if intVal, ok := val.(int64); ok {
-				strVal := strconv.FormatInt(intVal, 10)
-				return strVal, true
-			}
+			strVal := strconv.FormatInt(val.Counter, 10)
+			return strVal, nil
 		}
 	case GaugeKind:
 		{
-			if floatVal, ok := val.(float64); ok {
-				strVal := strconv.FormatFloat(floatVal, 'f', -1, 64)
-				return strVal, true
-			}
+			strVal := strconv.FormatFloat(val.Gauge, 'f', -1, 64)
+			return strVal, nil
 		}
 	}
-	return "", false
-}
-
-func AsGaugeMetric(metric Metric, val any) (float64, bool) {
-	if floatVal, ok := val.(float64); ok {
-		return floatVal, true
-	}
-	return 0, false
-}
-
-func AsCounterMetric(metric Metric, val any) (int64, bool) {
-	if intVal, ok := val.(int64); ok {
-		return intVal, true
-	}
-	return 0, false
+	return "", ErrInvalidMetricValue
 }
 
 type SaveableMetricValue struct {
-	Kind         string  `json:"kind"`
-	Name         string  `json:"name"`
-	Int64Value   int64   `json:"intVal,omitempty"`
-	Float64Value float64 `json:"floatVal,omitempty"`
+	Kind    string  `json:"kind"`
+	Name    string  `json:"name"`
+	Counter int64   `json:"counter,omitempty"`
+	Gauge   float64 `json:"gauge,omitempty"`
 }
 
-func AsSaveableMetric(metric Metric, val any) (SaveableMetricValue, error) {
-	if intVal, ok := val.(int64); ok {
-		return SaveableMetricValue{metric.Kind, metric.Name, intVal, 0}, nil
-	}
-	if floatVal, ok := val.(float64); ok {
-		return SaveableMetricValue{metric.Kind, metric.Name, 0, floatVal}, nil
-	}
-	return SaveableMetricValue{}, ErrInvalidMetricValue
+func AsSaveableMetric(key MetricKey, val MetricValue) SaveableMetricValue {
+	return SaveableMetricValue{Kind: key.Kind, Name: key.Name, Gauge: val.Gauge, Counter: val.Counter}
 }

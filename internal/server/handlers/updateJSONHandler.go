@@ -16,7 +16,8 @@ func MakeUpdateJSONHandler(store storage.Storage) http.HandlerFunc {
 
 		metrics := &dto.Metrics{}
 		if err := easyjson.UnmarshalFromReader(r.Body, metrics); err != nil {
-			http.Error(w, "Error parsing request body", http.StatusBadRequest)
+			w.WriteHeader(http.StatusBadRequest)
+			return
 		}
 
 		switch {
@@ -26,7 +27,7 @@ func MakeUpdateJSONHandler(store storage.Storage) http.HandlerFunc {
 				{
 					if metrics.Value != nil {
 						var err error
-						*metrics.Value, err = service.UpdateAndGetGaugeMetric(store, metrics.ID, *metrics.Value)
+						*metrics.Value, err = service.UpdateAndGetGaugeMetric(r.Context(), store, metrics.ID, *metrics.Value)
 						if err != nil {
 							w.WriteHeader(http.StatusInternalServerError)
 						} else {
@@ -34,14 +35,14 @@ func MakeUpdateJSONHandler(store storage.Storage) http.HandlerFunc {
 							easyjson.MarshalToHTTPResponseWriter(metrics, w)
 						}
 					} else {
-						http.Error(w, "Metric value not set", http.StatusBadRequest)
+						w.WriteHeader(http.StatusBadRequest)
 					}
 				}
 			case model.CounterKind:
 				{
 					if metrics.Delta != nil {
 						var err error
-						*metrics.Delta, err = service.UpdateAndGetCounterMetric(store, metrics.ID, *metrics.Delta)
+						*metrics.Delta, err = service.UpdateAndGetCounterMetric(r.Context(), store, metrics.ID, *metrics.Delta)
 						if err != nil {
 							w.WriteHeader(http.StatusInternalServerError)
 						} else {
@@ -49,18 +50,18 @@ func MakeUpdateJSONHandler(store storage.Storage) http.HandlerFunc {
 							easyjson.MarshalToHTTPResponseWriter(metrics, w)
 						}
 					} else {
-						http.Error(w, "Metric value not set", http.StatusBadRequest)
+						w.WriteHeader(http.StatusBadRequest)
 					}
 				}
 			default:
-				http.Error(w, "Bad metric type", http.StatusBadRequest)
+				w.WriteHeader(http.StatusBadRequest)
 			}
 		case !model.ValidMetricKind(metrics.MType):
-			http.Error(w, "Metric type not supported", http.StatusBadRequest)
+			w.WriteHeader(http.StatusBadRequest)
 		case metrics.ID == "":
-			http.Error(w, "Metric name cannot be empty", http.StatusNotFound)
+			w.WriteHeader(http.StatusNotFound)
 		default:
-			http.Error(w, "Method unimplemented", http.StatusNotImplemented)
+			w.WriteHeader(http.StatusNotImplemented)
 		}
 	}
 }

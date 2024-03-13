@@ -14,7 +14,6 @@ import (
 func TestMakeUpdatePathHandler(t *testing.T) {
 	type want struct {
 		code        int
-		response    string
 		contentType string
 	}
 	tests := []struct {
@@ -27,7 +26,6 @@ func TestMakeUpdatePathHandler(t *testing.T) {
 			requestPath: "/update/counter/testcounter/3",
 			want: want{
 				code:        200,
-				response:    "",
 				contentType: "text/plain",
 			},
 		},
@@ -36,7 +34,6 @@ func TestMakeUpdatePathHandler(t *testing.T) {
 			requestPath: "/update/gauge/testcounter/3",
 			want: want{
 				code:        200,
-				response:    "",
 				contentType: "text/plain",
 			},
 		},
@@ -45,7 +42,6 @@ func TestMakeUpdatePathHandler(t *testing.T) {
 			requestPath: "/update/invalid/testcounter/3",
 			want: want{
 				code:        400,
-				response:    "Metric type not supported\n",
 				contentType: "text/plain; charset=utf-8",
 			},
 		},
@@ -54,7 +50,6 @@ func TestMakeUpdatePathHandler(t *testing.T) {
 			requestPath: "/update/counter/",
 			want: want{
 				code:        404,
-				response:    "Metric name cannot be empty\n",
 				contentType: "text/plain; charset=utf-8",
 			},
 		},
@@ -63,7 +58,6 @@ func TestMakeUpdatePathHandler(t *testing.T) {
 			requestPath: "/update/gauge/",
 			want: want{
 				code:        404,
-				response:    "Metric name cannot be empty\n",
 				contentType: "text/plain; charset=utf-8",
 			},
 		},
@@ -72,7 +66,6 @@ func TestMakeUpdatePathHandler(t *testing.T) {
 			requestPath: "/update/counter/testmetric",
 			want: want{
 				code:        400,
-				response:    "Bad metric value\n",
 				contentType: "text/plain; charset=utf-8",
 			},
 		},
@@ -81,7 +74,6 @@ func TestMakeUpdatePathHandler(t *testing.T) {
 			requestPath: "/update/gauge/testmetric",
 			want: want{
 				code:        400,
-				response:    "Bad metric value\n",
 				contentType: "text/plain; charset=utf-8",
 			},
 		},
@@ -90,7 +82,6 @@ func TestMakeUpdatePathHandler(t *testing.T) {
 			requestPath: "/update/counter/testmetric/badval",
 			want: want{
 				code:        400,
-				response:    "Bad metric value\n",
 				contentType: "text/plain; charset=utf-8",
 			},
 		},
@@ -99,7 +90,6 @@ func TestMakeUpdatePathHandler(t *testing.T) {
 			requestPath: "/update/gauge/testmetric/badval",
 			want: want{
 				code:        400,
-				response:    "Bad metric value\n",
 				contentType: "text/plain; charset=utf-8",
 			},
 		},
@@ -107,7 +97,7 @@ func TestMakeUpdatePathHandler(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			// Для каждого теста нужно новое хранилище, чтобы результаты не зависили от порядка выполнения
-			store, err := storage.NewStorage(0, "test.txt", false)
+			store, err := storage.NewMemStorage(0, "test.txt", false)
 			assert.NoError(t, err, "Error creating store for test")
 			handler := MakeUpdatePathHandler(store)
 
@@ -121,10 +111,9 @@ func TestMakeUpdatePathHandler(t *testing.T) {
 			assert.Equal(t, test.want.code, res.StatusCode)
 			// получаем и проверяем тело запроса
 			defer res.Body.Close()
-			resBody, err := io.ReadAll(res.Body)
+			_, err = io.ReadAll(res.Body)
 
 			require.NoError(t, err)
-			assert.Equal(t, test.want.response, string(resBody))
 			assert.Equal(t, test.want.contentType, res.Header.Get("Content-Type"))
 		})
 	}

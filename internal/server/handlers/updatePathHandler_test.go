@@ -42,7 +42,7 @@ func TestMakeUpdatePathHandler(t *testing.T) {
 			requestPath: "/update/invalid/testcounter/3",
 			want: want{
 				code:        400,
-				contentType: "text/plain; charset=utf-8",
+				contentType: "text/plain",
 			},
 		},
 		{
@@ -50,7 +50,7 @@ func TestMakeUpdatePathHandler(t *testing.T) {
 			requestPath: "/update/counter/",
 			want: want{
 				code:        404,
-				contentType: "text/plain; charset=utf-8",
+				contentType: "text/plain",
 			},
 		},
 		{
@@ -58,7 +58,7 @@ func TestMakeUpdatePathHandler(t *testing.T) {
 			requestPath: "/update/gauge/",
 			want: want{
 				code:        404,
-				contentType: "text/plain; charset=utf-8",
+				contentType: "text/plain",
 			},
 		},
 		{
@@ -66,7 +66,7 @@ func TestMakeUpdatePathHandler(t *testing.T) {
 			requestPath: "/update/counter/testmetric",
 			want: want{
 				code:        400,
-				contentType: "text/plain; charset=utf-8",
+				contentType: "text/plain",
 			},
 		},
 		{
@@ -74,7 +74,7 @@ func TestMakeUpdatePathHandler(t *testing.T) {
 			requestPath: "/update/gauge/testmetric",
 			want: want{
 				code:        400,
-				contentType: "text/plain; charset=utf-8",
+				contentType: "text/plain",
 			},
 		},
 		{
@@ -82,7 +82,7 @@ func TestMakeUpdatePathHandler(t *testing.T) {
 			requestPath: "/update/counter/testmetric/badval",
 			want: want{
 				code:        400,
-				contentType: "text/plain; charset=utf-8",
+				contentType: "text/plain",
 			},
 		},
 		{
@@ -90,7 +90,7 @@ func TestMakeUpdatePathHandler(t *testing.T) {
 			requestPath: "/update/gauge/testmetric/badval",
 			want: want{
 				code:        400,
-				contentType: "text/plain; charset=utf-8",
+				contentType: "text/plain",
 			},
 		},
 	}

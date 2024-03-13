@@ -62,7 +62,7 @@ func (s dbStorage) UpsertGauge(ctx context.Context, key model.MetricKey, value m
 	gauge := sql.NullFloat64{Float64: value.Gauge}
 
 	upsertMetricQuery := "INSERT INTO metrics(mtype, mname, gauge) VALUES ($1, $2, $3) " +
-		"ON CONFLICS (mtype, mname) DO UPDATE SET gauge = EXCLUDED.gauge"
+		"ON CONFLICT (mtype, mname) DO UPDATE SET gauge = EXCLUDED.gauge"
 
 	_, err := s.dbpool.Exec(
 		ctx,
@@ -84,7 +84,7 @@ func (s dbStorage) UpsertCounterAndGet(ctx context.Context, key model.MetricKey,
 	var counter sql.NullInt64
 
 	upsertMetricQuery := "INSERT INTO metrics(mtype, mname, counter) VALUES ($1, $2, $3) " +
-		"ON CONFLICT (mtype, mname) DO UPDATE SET counter = COALESCE(counter, 0) + EXCLLUDED.counter " +
+		"ON CONFLICT (mtype, mname) DO UPDATE SET counter = COALESCE(metrics.counter, 0) + EXCLUDED.counter " +
 		"RETURNING counter"
 	err := s.dbpool.QueryRow(
 		ctx,

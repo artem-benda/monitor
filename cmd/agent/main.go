@@ -27,7 +27,7 @@ func main() {
 	client.SetTimeout(30 * time.Second)
 	client.OnAfterResponse(logger.NewRestyResponseLogger())
 
-	var metrics map[model.Metric]any
+	var metrics map[model.MetricKey]model.MetricValue
 
 	go func() {
 		for {

@@ -24,6 +24,11 @@ jobs:
     services:
       postgres:
         image: postgres
+        restart: always
+        volumes:
+          - pg_project:/var/lib/postgresql/data
+        ports:
+          - ${POSTGRES_PORT:-5432}:5432
         env:
           POSTGRES_USER: pguser
           POSTGRES_PASSWORD: postgres

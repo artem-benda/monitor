@@ -9,6 +9,7 @@ import (
 	"github.com/artem-benda/monitor/internal/client/storage"
 	"github.com/artem-benda/monitor/internal/logger"
 	"github.com/artem-benda/monitor/internal/model"
+	"github.com/artem-benda/monitor/internal/retry"
 	"github.com/go-resty/resty/v2"
 	"go.uber.org/zap"
 )
@@ -36,6 +37,8 @@ func main() {
 			time.Sleep(time.Duration(config.PollInterval) * time.Second)
 		}
 	}()
+
+	retryController := retry.NewRetryController()
 
 	for {
 		err := requests.SendAllMetrics(client, metrics)

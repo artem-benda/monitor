@@ -41,7 +41,7 @@ func main() {
 	retryController := retry.NewRetryController()
 
 	for {
-		err := requests.SendAllMetrics(client, metrics)
+		err := requests.SendAllMetrics(client, retryController, metrics)
 
 		if err != nil {
 			logger.Log.Debug("error sending metrics batch", zap.Error(err))

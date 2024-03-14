@@ -2,13 +2,14 @@ package storage
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"os"
 	"sync"
 	"time"
 
+	"github.com/artem-benda/monitor/internal/dto"
 	"github.com/artem-benda/monitor/internal/model"
+	"github.com/mailru/easyjson"
 )
 
 type memStorage struct {
@@ -20,7 +21,8 @@ type memStorage struct {
 
 func NewMemStorage(saveIntervalSec int, filename string, restore bool) (Storage, error) {
 	var metrics = make(map[model.MetricKey]model.MetricValue)
-	var savedMetrics []model.SaveableMetricValue
+	var savedMetrics dto.MetricsBatch
+
 	if restore {
 		if _, err := os.Stat(filename); !errors.Is(err, os.ErrNotExist) {
 			var (
@@ -30,18 +32,18 @@ func NewMemStorage(saveIntervalSec int, filename string, restore bool) (Storage,
 			if bytes, err = os.ReadFile(filename); err != nil {
 				return nil, err
 			}
-			if err = json.Unmarshal(bytes, &savedMetrics); err != nil {
+			if err = easyjson.Unmarshal(bytes, &savedMetrics); err != nil {
 				return nil, err
 			}
 			for _, m := range savedMetrics {
-				switch m.Kind {
+				switch m.MType {
 				case model.GaugeKind:
 					{
-						metrics[model.MetricKey{Kind: m.Kind, Name: m.Name}] = model.MetricValue{Gauge: m.Gauge}
+						metrics[model.MetricKey{Kind: m.MType, Name: m.ID}] = model.MetricValue{Gauge: *m.Value}
 					}
 				case model.CounterKind:
 					{
-						metrics[model.MetricKey{Kind: m.Kind, Name: m.Name}] = model.MetricValue{Counter: m.Counter}
+						metrics[model.MetricKey{Kind: m.MType, Name: m.ID}] = model.MetricValue{Counter: *m.Delta}
 					}
 				}
 			}
@@ -119,12 +121,14 @@ func (m memStorage) GetAll(ctx context.Context) (map[model.MetricKey]model.Metri
 }
 
 func (m memStorage) saveToFile() error {
-	var saveableMetrics []model.SaveableMetricValue
+	var dtos dto.MetricsBatch = make(dto.MetricsBatch, 0)
+
 	for k, v := range m.values {
-		s := model.AsSaveableMetric(k, v)
-		saveableMetrics = append(saveableMetrics, s)
+		s := model.AsDto(k, v)
+		dtos = append(dtos, s)
 	}
-	bytes, err := json.Marshal(saveableMetrics)
+
+	bytes, err := easyjson.Marshal(dtos)
 	if err != nil {
 		panic(err)
 	}

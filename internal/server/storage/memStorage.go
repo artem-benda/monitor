@@ -146,7 +146,7 @@ func (m memStorage) UpsertBatch(ctx context.Context, metrics []model.MetricKeyWi
 }
 
 func (m memStorage) saveToFile() error {
-	var dtos dto.MetricsBatch = make(dto.MetricsBatch, 0)
+	dtos := make(dto.MetricsBatch, 0)
 
 	for k, v := range m.values {
 		s := model.AsDto(k, v)

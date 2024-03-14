@@ -7,6 +7,7 @@ import (
 
 	"github.com/artem-benda/monitor/internal/logger"
 	"github.com/artem-benda/monitor/internal/model"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
 )
@@ -33,7 +34,7 @@ func (s dbStorage) Get(ctx context.Context, key model.MetricKey) (model.MetricVa
 		key.Name,
 	).Scan(&mtype, &mname, &gauge, &counter)
 	switch {
-	case err == sql.ErrNoRows:
+	case err == pgx.ErrNoRows:
 		{
 			logger.Log.Debug("metric not found")
 			return model.MetricValue{}, false, nil

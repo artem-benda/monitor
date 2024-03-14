@@ -51,6 +51,7 @@ func newAppRouter() *chi.Mux {
 	r.Use(gzipper.GzipMiddleware)
 	r.Post("/update/{metricType}/{metricName}/{metricValue}", handlers.MakeUpdatePathHandler(store))
 	r.Post("/update/", handlers.MakeUpdateJSONHandler(store))
+	r.Post("/updates/", handlers.MakeUpdateBatchJSONHandler(store))
 	r.Route("/", func(r chi.Router) {
 		r.Get("/", handlers.MakeGetAllHandler(store))
 		r.Get("/ping", handlers.MakePingDatabaseHandler(dbpool))

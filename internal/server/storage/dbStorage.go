@@ -3,6 +3,7 @@ package storage
 import (
 	"context"
 	"database/sql"
+	"sort"
 
 	"github.com/artem-benda/monitor/internal/logger"
 	"github.com/artem-benda/monitor/internal/model"
@@ -61,8 +62,8 @@ func (s dbStorage) UpsertGauge(ctx context.Context, key model.MetricKey, value m
 
 	gauge := sql.NullFloat64{Float64: value.Gauge}
 
-	upsertMetricQuery := "INSERT INTO metrics(mtype, mname, gauge) VALUES ($1, $2, $3) " +
-		"ON CONFLICT (mtype, mname) DO UPDATE SET gauge = EXCLUDED.gauge"
+	upsertMetricQuery := `INSERT INTO metrics(mtype, mname, gauge) VALUES ($1, $2, $3) 
+		"ON CONFLICT (mtype, mname) DO UPDATE SET gauge = EXCLUDED.gauge`
 
 	_, err := s.dbpool.Exec(
 		ctx,
@@ -83,9 +84,9 @@ func (s dbStorage) UpsertCounterAndGet(ctx context.Context, key model.MetricKey,
 	// Сюда получим актуальное значение счетчика после его обновления
 	var counter sql.NullInt64
 
-	upsertMetricQuery := "INSERT INTO metrics(mtype, mname, counter) VALUES ($1, $2, $3) " +
-		"ON CONFLICT (mtype, mname) DO UPDATE SET counter = COALESCE(metrics.counter, 0) + EXCLUDED.counter " +
-		"RETURNING counter"
+	upsertMetricQuery := `INSERT INTO metrics(mtype, mname, counter) VALUES ($1, $2, $3) 
+		ON CONFLICT (mtype, mname) DO UPDATE SET counter = COALESCE(metrics.counter, 0) + EXCLUDED.counter 
+		RETURNING counter`
 	err := s.dbpool.QueryRow(
 		ctx,
 		upsertMetricQuery,
@@ -146,4 +147,44 @@ func (s dbStorage) GetAll(ctx context.Context) (map[model.MetricKey]model.Metric
 	}
 
 	return m, nil
+}
+
+func (s dbStorage) UpsertBatch(ctx context.Context, metrics []model.MetricKeyWithValue) error {
+	// Сортировка для исключения deadlocks при параллельном обновлении пачек метрик
+	sort.Slice(metrics, func(i, j int) bool {
+		if metrics[i].Name != metrics[j].Name {
+			return metrics[i].Name < metrics[j].Name
+		} else {
+			return metrics[i].Kind < metrics[j].Kind
+		}
+	})
+
+	tx, err := s.dbpool.Begin(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	defer tx.Rollback(ctx)
+
+	_, err = tx.Prepare(
+		ctx,
+		"upsert-metrics",
+		`INSERT INTO metrics(mtype, mname, gauge, counter) VALUES ($1, $2, $3, $4) 
+		ON CONFLICT (mtype, mname) DO UPDATE
+		SET counter = COALESCE(metrics.counter, 0) + EXCLUDED.counter, gauge = EXCLUDED.gauge`,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	for _, m := range metrics {
+		_, err := tx.Exec(ctx, "upsert-metrics", m.Kind, m.Name, m.Gauge, m.Counter)
+
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

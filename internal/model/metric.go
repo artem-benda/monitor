@@ -24,6 +24,13 @@ type MetricValue struct {
 	Counter int64
 }
 
+type MetricKeyWithValue struct {
+	Kind    string
+	Name    string
+	Gauge   float64
+	Counter int64
+}
+
 func ValidMetricKind(s string) bool {
 	return s == GaugeKind || s == CounterKind
 }

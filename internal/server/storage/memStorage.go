@@ -120,6 +120,31 @@ func (m memStorage) GetAll(ctx context.Context) (map[model.MetricKey]model.Metri
 	return copy, nil
 }
 
+func (m memStorage) UpsertBatch(ctx context.Context, metrics []model.MetricKeyWithValue) error {
+	for _, v := range metrics {
+		switch v.Kind {
+		case model.GaugeKind:
+			{
+				err := m.UpsertGauge(ctx, model.MetricKey{Kind: v.Kind, Name: v.Name}, model.MetricValue{Gauge: v.Gauge, Counter: v.Counter})
+
+				if err != nil {
+					return err
+				}
+			}
+		case model.CounterKind:
+			{
+				_, err := m.UpsertCounterAndGet(ctx, model.MetricKey{Kind: v.Kind, Name: v.Name}, v.Counter)
+
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
 func (m memStorage) saveToFile() error {
 	var dtos dto.MetricsBatch = make(dto.MetricsBatch, 0)
 

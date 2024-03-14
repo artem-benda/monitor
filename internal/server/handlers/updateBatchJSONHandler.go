@@ -4,10 +4,12 @@ import (
 	"net/http"
 
 	"github.com/artem-benda/monitor/internal/dto"
+	"github.com/artem-benda/monitor/internal/logger"
 	"github.com/artem-benda/monitor/internal/model"
 	"github.com/artem-benda/monitor/internal/server/service"
 	"github.com/artem-benda/monitor/internal/server/storage"
 	"github.com/mailru/easyjson"
+	"go.uber.org/zap"
 )
 
 func MakeUpdateBatchJSONHandler(store storage.Storage) http.HandlerFunc {
@@ -17,7 +19,13 @@ func MakeUpdateBatchJSONHandler(store storage.Storage) http.HandlerFunc {
 		dtos := make(dto.MetricsBatch, 0)
 
 		if err := easyjson.UnmarshalFromReader(r.Body, &dtos); err != nil {
+			logger.Log.Debug("error unmarshalling dtos", zap.Error(err))
 			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		if len(dtos) == 0 {
+			w.WriteHeader(http.StatusOK)
 			return
 		}
 

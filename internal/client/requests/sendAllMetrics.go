@@ -13,7 +13,7 @@ import (
 )
 
 func SendAllMetrics(resty *resty.Client, metrics map[model.MetricKey]model.MetricValue) error {
-	dtos := make(dto.MetricsBatch, len(metrics))
+	dtos := make(dto.MetricsBatch, 0)
 
 	for k, v := range metrics {
 		dtos = append(dtos, model.AsDto(k, v))

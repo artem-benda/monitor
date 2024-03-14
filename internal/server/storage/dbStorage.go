@@ -187,5 +187,11 @@ func (s dbStorage) UpsertBatch(ctx context.Context, metrics []model.MetricKeyWit
 			return err
 		}
 	}
+	err = tx.Commit(ctx)
+
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

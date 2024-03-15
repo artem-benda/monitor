@@ -96,7 +96,7 @@ func (s dbStorage) get(ctx context.Context, key model.MetricKey) (model.MetricVa
 		}
 	case key.Kind == model.CounterKind && counter.Valid:
 		{
-			return model.MetricValue{Counter: counter.Int64}, true, err
+			return model.MetricValue{Counter: counter.Int64}, true, nil
 		}
 	}
 	return model.MetricValue{}, false, errInvalidData

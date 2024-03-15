@@ -5,7 +5,7 @@ type ErrNetwork struct {
 }
 
 func (e ErrNetwork) Error() string {
-	return e.Err.Error()
+	return "temporary network error"
 }
 
 func (e *ErrNetwork) Unwrap() error {
@@ -17,7 +17,7 @@ type ErrServerTemporary struct {
 }
 
 func (e ErrServerTemporary) Error() string {
-	return e.Err.Error()
+	return "temporary server error"
 }
 
 func (e *ErrServerTemporary) Unwrap() error {

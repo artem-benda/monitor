@@ -5,7 +5,7 @@ type ErrStorageConnection struct {
 }
 
 func (e ErrStorageConnection) Error() string {
-	return e.Err.Error()
+	return "temporary storage connection error"
 }
 
 func (e *ErrStorageConnection) Unwrap() error {

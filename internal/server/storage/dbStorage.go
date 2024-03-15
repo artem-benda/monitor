@@ -107,7 +107,7 @@ func (s dbStorage) upsertGauge(ctx context.Context, key model.MetricKey, value m
 		return errInvaligArgument
 	}
 
-	gauge := sql.NullFloat64{Float64: value.Gauge}
+	gauge := sql.NullFloat64{Float64: value.Gauge, Valid: true}
 
 	upsertMetricQuery := `INSERT INTO metrics(mtype, mname, gauge) VALUES ($1, $2, $3) 
 		ON CONFLICT (mtype, mname) DO UPDATE SET gauge = EXCLUDED.gauge`

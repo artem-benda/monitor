@@ -65,5 +65,10 @@ func sendBytes(resty *resty.Client, b []byte) (*resty.Response, error) {
 	if err != nil {
 		return nil, errors.ErrNetwork{Err: err}
 	}
+
+	if resp.StatusCode() >= 500 {
+		return nil, errors.ErrServerTemporary{Err: err}
+	}
+
 	return resp, err
 }

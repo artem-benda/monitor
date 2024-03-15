@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/artem-benda/monitor/internal/client/errors"
 	"github.com/artem-benda/monitor/internal/client/requests"
 	"github.com/artem-benda/monitor/internal/client/service"
 	"github.com/artem-benda/monitor/internal/client/storage"
@@ -38,7 +39,7 @@ func main() {
 		}
 	}()
 
-	retryController := retry.NewRetryController()
+	retryController := retry.NewRetryController(errors.ErrNetwork{}, errors.ErrServerTemporary{})
 
 	for {
 		err := requests.SendAllMetrics(client, retryController, metrics)

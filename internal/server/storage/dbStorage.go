@@ -110,7 +110,7 @@ func (s dbStorage) upsertGauge(ctx context.Context, key model.MetricKey, value m
 	gauge := sql.NullFloat64{Float64: value.Gauge}
 
 	upsertMetricQuery := `INSERT INTO metrics(mtype, mname, gauge) VALUES ($1, $2, $3) 
-		"ON CONFLICT (mtype, mname) DO UPDATE SET gauge = EXCLUDED.gauge`
+		ON CONFLICT (mtype, mname) DO UPDATE SET gauge = EXCLUDED.gauge`
 
 	_, err := s.dbpool.Exec(
 		ctx,

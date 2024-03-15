@@ -16,37 +16,42 @@ func MakeGetJSONHandler(store storage.Storage) http.HandlerFunc {
 
 		metrics := &dto.Metrics{}
 		if err := easyjson.UnmarshalFromReader(r.Body, metrics); err != nil {
-			http.Error(w, "Error parsing request body", http.StatusBadRequest)
+			w.WriteHeader(http.StatusBadRequest)
+			return
 		}
 
 		switch {
 		case !model.ValidMetricKind(metrics.MType):
 			{
-				http.Error(w, "Metric type not supported", http.StatusBadRequest)
+				w.WriteHeader(http.StatusBadRequest)
 			}
 		case metrics.MType == model.GaugeKind && metrics.ID != "":
 			{
-				if floatVal, ok := service.GetGaugeMetric(store, metrics.ID); ok {
+				if floatVal, ok, err := service.GetGaugeMetric(r.Context(), store, metrics.ID); err != nil {
+					w.WriteHeader(http.StatusInternalServerError)
+				} else if ok {
 					w.WriteHeader(http.StatusOK)
 					metrics.Value = &floatVal
 					easyjson.MarshalToHTTPResponseWriter(metrics, w)
 				} else {
-					http.Error(w, "{}", http.StatusNotFound)
+					w.WriteHeader(http.StatusNotFound)
 				}
 			}
 		case metrics.MType == model.CounterKind && metrics.ID != "":
 			{
-				if intVal, ok := service.GetCounterMetric(store, metrics.ID); ok {
+				if intVal, ok, err := service.GetCounterMetric(r.Context(), store, metrics.ID); err != nil {
+					w.WriteHeader(http.StatusInternalServerError)
+				} else if ok {
 					w.WriteHeader(http.StatusOK)
 					metrics.Delta = &intVal
 					easyjson.MarshalToHTTPResponseWriter(metrics, w)
 				} else {
-					http.Error(w, "{}", http.StatusNotFound)
+					w.WriteHeader(http.StatusNotFound)
 				}
 			}
 		default:
 			{
-				http.Error(w, "", http.StatusNotFound)
+				w.WriteHeader(http.StatusNotFound)
 			}
 		}
 	}

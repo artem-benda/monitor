@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/artem-benda/monitor/internal/gzipper"
@@ -24,12 +25,17 @@ func main() {
 		defer logger.Log.Sync()
 	}
 
-	dbpool = newConnectionPool(config.DatabaseDSN)
-	defer dbpool.Close()
+	if config.DatabaseDSN != "" {
+		dbpool = newConnectionPool(config.DatabaseDSN)
+		initDB(dbpool)
+		defer dbpool.Close()
 
-	store, err = storage.NewStorage(config.StoreIntervalSeconds, config.StoreFileName, config.StoreRestoreFromFile)
-	if err != nil {
-		panic(err)
+		store = storage.NewDBStorage(dbpool)
+	} else {
+		store, err = storage.NewMemStorage(config.StoreIntervalSeconds, config.StoreFileName, config.StoreRestoreFromFile)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	r := newAppRouter()
@@ -52,4 +58,18 @@ func newAppRouter() *chi.Mux {
 		r.Post("/value/", handlers.MakeGetJSONHandler(store))
 	})
 	return r
+}
+
+func initDB(dbpool *pgxpool.Pool) {
+	createTblMetrics := "CREATE TABLE IF NOT EXISTS metrics(" +
+		"mtype text NOT NULL," +
+		"mname text NOT NULL," +
+		"gauge double precision," +
+		"counter bigint," +
+		"PRIMARY KEY (mtype, mname)" +
+		")"
+	_, err := dbpool.Exec(context.Background(), createTblMetrics)
+	if err != nil {
+		panic(err)
+	}
 }

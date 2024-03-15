@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"testing"
 
 	"github.com/artem-benda/monitor/internal/model"
@@ -17,22 +18,22 @@ func TestUpdateMetric(t *testing.T) {
 	tests := []struct {
 		name    string
 		metrics []metric
-		want    map[model.Metric]any
+		want    map[model.MetricKey]model.MetricValue
 		wantErr bool
 	}{
 		{
 			name:    "Initial counter update",
 			metrics: []metric{{kind: "counter", name: "test", strVal: "1"}},
-			want: map[model.Metric]any{
-				{Kind: "counter", Name: "test"}: int64(1),
+			want: map[model.MetricKey]model.MetricValue{
+				{Kind: "counter", Name: "test"}: {Counter: int64(1)},
 			},
 			wantErr: false,
 		},
 		{
 			name:    "Initial gauge update",
 			metrics: []metric{{kind: "gauge", name: "test", strVal: "1.123456"}},
-			want: map[model.Metric]any{
-				{Kind: "gauge", Name: "test"}: float64(1.123456),
+			want: map[model.MetricKey]model.MetricValue{
+				{Kind: "gauge", Name: "test"}: {Gauge: float64(1.123456)},
 			},
 			wantErr: false,
 		},
@@ -42,8 +43,8 @@ func TestUpdateMetric(t *testing.T) {
 				{kind: "counter", name: "test", strVal: "1"},
 				{kind: "counter", name: "test", strVal: "3"},
 			},
-			want: map[model.Metric]any{
-				{Kind: "counter", Name: "test"}: int64(4),
+			want: map[model.MetricKey]model.MetricValue{
+				{Kind: "counter", Name: "test"}: {Counter: int64(4)},
 			},
 			wantErr: false,
 		},
@@ -53,18 +54,18 @@ func TestUpdateMetric(t *testing.T) {
 				{kind: "gauge", name: "test", strVal: "1.123456"},
 				{kind: "gauge", name: "test", strVal: "1.654321"},
 			},
-			want: map[model.Metric]any{
-				{Kind: "gauge", Name: "test"}: float64(1.654321),
+			want: map[model.MetricKey]model.MetricValue{
+				{Kind: "gauge", Name: "test"}: {Gauge: float64(1.654321)},
 			},
 			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			store, err := storage.NewStorage(0, "test.txt", false)
+			store, err := storage.NewMemStorage(10000, "test.txt", false)
 			assert.NoError(t, err, "Error creating store for test")
 			for _, metric := range tt.metrics {
-				err := UpdateMetric(store, metric.kind, metric.name, metric.strVal)
+				err := UpdateMetric(context.Background(), store, metric.kind, metric.name, metric.strVal)
 				if tt.wantErr {
 					assert.Error(t, err)
 				} else {
@@ -72,7 +73,7 @@ func TestUpdateMetric(t *testing.T) {
 				}
 			}
 			for wantMetric, wantValue := range tt.want {
-				value, _ := store.Get(wantMetric)
+				value, _, _ := store.Get(context.Background(), wantMetric)
 				assert.Equal(t, wantValue, value)
 			}
 		})

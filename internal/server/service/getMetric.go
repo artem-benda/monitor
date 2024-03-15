@@ -1,30 +1,48 @@
 package service
 
 import (
+	"context"
+
 	"github.com/artem-benda/monitor/internal/model"
 	"github.com/artem-benda/monitor/internal/server/storage"
 )
 
-func GetMetric(storage storage.Storage, kind string, name string) (string, bool) {
-	key := model.Metric{Kind: kind, Name: name}
-	if val, ok := storage.Get(key); ok {
-		return model.StringValue(key, val)
+func GetMetric(ctx context.Context, s storage.Storage, kind string, name string) (string, bool, error) {
+	key := model.MetricKey{Kind: kind, Name: name}
+	val, ok, err := s.Get(ctx, key)
+	if err != nil {
+		return "", false, err
 	}
-	return "", false
+	if ok {
+		stringValue, err := model.StringValue(key, val)
+		if err != nil {
+			return "", false, err
+		}
+		return stringValue, true, nil
+	}
+	return "", false, nil
 }
 
-func GetGaugeMetric(storage storage.Storage, name string) (float64, bool) {
-	key := model.Metric{Kind: model.GaugeKind, Name: name}
-	if val, ok := storage.Get(key); ok {
-		return model.AsGaugeMetric(key, val)
+func GetGaugeMetric(ctx context.Context, storage storage.Storage, name string) (float64, bool, error) {
+	key := model.MetricKey{Kind: model.GaugeKind, Name: name}
+	val, ok, err := storage.Get(ctx, key)
+	if err != nil {
+		return 0, false, err
 	}
-	return 0, false
+	if ok {
+		return val.Gauge, true, nil
+	}
+	return 0, false, nil
 }
 
-func GetCounterMetric(storage storage.Storage, name string) (int64, bool) {
-	key := model.Metric{Kind: model.CounterKind, Name: name}
-	if val, ok := storage.Get(key); ok {
-		return model.AsCounterMetric(key, val)
+func GetCounterMetric(ctx context.Context, storage storage.Storage, name string) (int64, bool, error) {
+	key := model.MetricKey{Kind: model.CounterKind, Name: name}
+	val, ok, err := storage.Get(ctx, key)
+	if err != nil {
+		return 0, false, err
 	}
-	return 0, false
+	if ok {
+		return val.Counter, true, nil
+	}
+	return 0, false, nil
 }

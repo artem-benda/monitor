@@ -3,24 +3,70 @@ package storage
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"sort"
 
 	"github.com/artem-benda/monitor/internal/logger"
 	"github.com/artem-benda/monitor/internal/model"
+	"github.com/artem-benda/monitor/internal/retry"
+	srverror "github.com/artem-benda/monitor/internal/server/errors"
+	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
 )
 
 type dbStorage struct {
 	dbpool *pgxpool.Pool
+	c      retry.RetryController
 }
 
-func NewDBStorage(dbpool *pgxpool.Pool) Storage {
-	return dbStorage{dbpool: dbpool}
+func NewDBStorage(dbpool *pgxpool.Pool, r retry.RetryController) Storage {
+	return dbStorage{dbpool: dbpool, c: r}
 }
 
-func (s dbStorage) Get(ctx context.Context, key model.MetricKey) (model.MetricValue, bool, error) {
+func (s dbStorage) Get(ctx context.Context, key model.MetricKey) (m model.MetricValue, ok bool, err error) {
+	err = s.c.Run(func() error {
+		m, ok, err = s.get(ctx, key)
+		return mapError(err)
+	})
+	return
+}
+
+func (s dbStorage) UpsertGauge(ctx context.Context, key model.MetricKey, value model.MetricValue) (err error) {
+	err = s.c.Run(func() error {
+		err = s.upsertGauge(ctx, key, value)
+		return mapError(err)
+	})
+	return
+}
+
+func (s dbStorage) UpsertCounterAndGet(ctx context.Context, key model.MetricKey, incCounter int64) (cnt int64, err error) {
+	err = s.c.Run(func() error {
+		cnt, err = s.upsertCounterAndGet(ctx, key, incCounter)
+		return mapError(err)
+	})
+	return
+}
+
+func (s dbStorage) GetAll(ctx context.Context) (m map[model.MetricKey]model.MetricValue, err error) {
+	err = s.c.Run(func() error {
+		m, err = s.getAll(ctx)
+		return mapError(err)
+	})
+	return
+}
+
+func (s dbStorage) UpsertBatch(ctx context.Context, metrics []model.MetricKeyWithValue) (err error) {
+	err = s.c.Run(func() error {
+		err = s.upsertBatch(ctx, metrics)
+		return mapError(err)
+	})
+	return
+}
+
+func (s dbStorage) get(ctx context.Context, key model.MetricKey) (model.MetricValue, bool, error) {
 	var (
 		mtype   string
 		mname   string
@@ -34,7 +80,7 @@ func (s dbStorage) Get(ctx context.Context, key model.MetricKey) (model.MetricVa
 		key.Name,
 	).Scan(&mtype, &mname, &gauge, &counter)
 	switch {
-	case err == pgx.ErrNoRows:
+	case errors.Is(err, pgx.ErrNoRows):
 		{
 			logger.Log.Debug("metric not found")
 			return model.MetricValue{}, false, nil
@@ -56,7 +102,7 @@ func (s dbStorage) Get(ctx context.Context, key model.MetricKey) (model.MetricVa
 	return model.MetricValue{}, false, errInvalidData
 }
 
-func (s dbStorage) UpsertGauge(ctx context.Context, key model.MetricKey, value model.MetricValue) error {
+func (s dbStorage) upsertGauge(ctx context.Context, key model.MetricKey, value model.MetricValue) error {
 	if key.Kind != model.GaugeKind {
 		return errInvaligArgument
 	}
@@ -77,7 +123,7 @@ func (s dbStorage) UpsertGauge(ctx context.Context, key model.MetricKey, value m
 	return err
 }
 
-func (s dbStorage) UpsertCounterAndGet(ctx context.Context, key model.MetricKey, incCounter int64) (int64, error) {
+func (s dbStorage) upsertCounterAndGet(ctx context.Context, key model.MetricKey, incCounter int64) (int64, error) {
 	if key.Kind != model.CounterKind {
 		return 0, errInvaligArgument
 	}
@@ -107,7 +153,7 @@ func (s dbStorage) UpsertCounterAndGet(ctx context.Context, key model.MetricKey,
 	return counter.Int64, err
 }
 
-func (s dbStorage) GetAll(ctx context.Context) (map[model.MetricKey]model.MetricValue, error) {
+func (s dbStorage) getAll(ctx context.Context) (map[model.MetricKey]model.MetricValue, error) {
 	rows, err := s.dbpool.Query(ctx, "SELECT mtype, mname, gauge, counter FROM metrics ORDER BY mtype, mname")
 	if err != nil {
 		return nil, err
@@ -150,7 +196,7 @@ func (s dbStorage) GetAll(ctx context.Context) (map[model.MetricKey]model.Metric
 	return m, nil
 }
 
-func (s dbStorage) UpsertBatch(ctx context.Context, metrics []model.MetricKeyWithValue) error {
+func (s dbStorage) upsertBatch(ctx context.Context, metrics []model.MetricKeyWithValue) error {
 	// Сортировка для исключения deadlocks при параллельном обновлении пачек метрик
 	sort.Slice(metrics, func(i, j int) bool {
 		if metrics[i].Name != metrics[j].Name {
@@ -194,4 +240,13 @@ func (s dbStorage) UpsertBatch(ctx context.Context, metrics []model.MetricKeyWit
 	}
 
 	return nil
+}
+
+func mapError(err error) error {
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.ConnectionException {
+		return srverror.ErrStorageConnection{Err: pgErr}
+	} else {
+		return err
+	}
 }

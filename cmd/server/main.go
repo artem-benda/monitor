@@ -6,6 +6,8 @@ import (
 
 	"github.com/artem-benda/monitor/internal/gzipper"
 	"github.com/artem-benda/monitor/internal/logger"
+	"github.com/artem-benda/monitor/internal/retry"
+	"github.com/artem-benda/monitor/internal/server/errors"
 	"github.com/artem-benda/monitor/internal/server/handlers"
 	"github.com/artem-benda/monitor/internal/server/storage"
 	"github.com/go-chi/chi/v5"
@@ -30,7 +32,8 @@ func main() {
 		initDB(dbpool)
 		defer dbpool.Close()
 
-		store = storage.NewDBStorage(dbpool)
+		retryController := retry.NewRetryController(errors.ErrStorageConnection{})
+		store = storage.NewDBStorage(dbpool, retryController)
 	} else {
 		store, err = storage.NewMemStorage(config.StoreIntervalSeconds, config.StoreFileName, config.StoreRestoreFromFile)
 		if err != nil {

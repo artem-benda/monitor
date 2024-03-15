@@ -243,12 +243,14 @@ func (s dbStorage) upsertBatch(ctx context.Context, metrics []model.MetricKeyWit
 }
 
 func mapError(err error) error {
+	if err == nil {
+		return nil
+	}
+
 	var pgErr *pgconn.PgError
 	if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.ConnectionException {
-		logger.Log.Debug("database pg error", zap.Error(pgErr))
 		return srverror.ErrStorageConnection{Err: pgErr}
 	} else {
-		logger.Log.Debug("database common error", zap.Error(err))
 		return err
 	}
 }

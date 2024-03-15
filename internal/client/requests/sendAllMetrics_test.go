@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/artem-benda/monitor/internal/model"
+	"github.com/artem-benda/monitor/internal/retry"
 	"github.com/go-resty/resty/v2"
 	"github.com/stretchr/testify/assert"
 )
@@ -26,7 +27,10 @@ func TestSendAllMetrics(t *testing.T) {
 	client := srv.Client()
 	resty := resty.NewWithClient(client)
 	resty.SetBaseURL(srv.URL)
-	SendAllMetrics(resty, metrics)
+
+	r := retry.NewRetryController()
+
+	SendAllMetrics(resty, r, metrics)
 	// Вызов только один, отправили пачкой
 	assert.Equal(t, 1, count)
 }

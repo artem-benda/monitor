@@ -74,7 +74,7 @@ func TestUpdateMetric(t *testing.T) {
 			}
 			for wantMetric, wantValue := range tt.want {
 				value, _, _ := store.Get(context.Background(), wantMetric)
-				assert.Equal(t, wantValue, value)
+				assert.Equal(t, wantValue, *value)
 			}
 		})
 	}

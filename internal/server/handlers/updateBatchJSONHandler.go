@@ -34,38 +34,27 @@ func MakeUpdateBatchJSONHandler(store storage.Storage) http.HandlerFunc {
 		for _, dto := range dtos {
 
 			switch {
-			case model.ValidMetricKind(dto.MType) && dto.MType != "" && dto.ID != "":
-				switch dto.MType {
-				case model.GaugeKind:
-					{
-						if dto.Value != nil {
-							models = append(models, model.MetricKeyWithValue{Kind: dto.MType, Name: dto.ID, Gauge: *dto.Value})
-						} else {
-							w.WriteHeader(http.StatusBadRequest)
-							return
-						}
-					}
-				case model.CounterKind:
-					{
-						if dto.Delta != nil {
-							models = append(models, model.MetricKeyWithValue{Kind: dto.MType, Name: dto.ID, Counter: *dto.Delta})
-						} else {
-							w.WriteHeader(http.StatusBadRequest)
-							return
-						}
-					}
-				default:
-					w.WriteHeader(http.StatusBadRequest)
-					return
-				}
 			case !model.ValidMetricKind(dto.MType):
 				w.WriteHeader(http.StatusBadRequest)
 				return
 			case dto.ID == "":
 				w.WriteHeader(http.StatusNotFound)
 				return
-			default:
+			case dto.MType == "":
 				w.WriteHeader(http.StatusNotImplemented)
+				return
+			case dto.MType == model.GaugeKind && dto.Value == nil:
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			case dto.MType == model.CounterKind && dto.Delta == nil:
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			case dto.MType == model.GaugeKind:
+				models = append(models, model.MetricKeyWithValue{Kind: dto.MType, Name: dto.ID, Gauge: *dto.Value})
+			case dto.MType == model.CounterKind:
+				models = append(models, model.MetricKeyWithValue{Kind: dto.MType, Name: dto.ID, Counter: *dto.Delta})
+			default:
+				w.WriteHeader(http.StatusBadRequest)
 				return
 			}
 		}

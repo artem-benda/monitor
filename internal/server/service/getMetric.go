@@ -10,17 +10,21 @@ import (
 func GetMetric(ctx context.Context, s storage.Storage, kind string, name string) (string, bool, error) {
 	key := model.MetricKey{Kind: kind, Name: name}
 	val, ok, err := s.Get(ctx, key)
+
 	if err != nil {
 		return "", false, err
 	}
-	if ok {
-		stringValue, err := model.StringValue(key, val)
-		if err != nil {
-			return "", false, err
-		}
-		return stringValue, true, nil
+
+	if !ok {
+		return "", false, nil
 	}
-	return "", false, nil
+
+	stringValue, err := model.StringValue(key, *val)
+	if err != nil {
+		return "", false, err
+	}
+
+	return stringValue, true, nil
 }
 
 func GetGaugeMetric(ctx context.Context, storage storage.Storage, name string) (float64, bool, error) {

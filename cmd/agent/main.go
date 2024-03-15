@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/artem-benda/monitor/internal/client/errors"
 	"github.com/artem-benda/monitor/internal/client/requests"
 	"github.com/artem-benda/monitor/internal/client/service"
 	"github.com/artem-benda/monitor/internal/client/storage"
 	"github.com/artem-benda/monitor/internal/logger"
 	"github.com/artem-benda/monitor/internal/model"
+	"github.com/artem-benda/monitor/internal/retry"
 	"github.com/go-resty/resty/v2"
 	"go.uber.org/zap"
 )
@@ -37,8 +39,10 @@ func main() {
 		}
 	}()
 
+	retryController := retry.NewRetryController(errors.ErrNetwork{}, errors.ErrServerTemporary{})
+
 	for {
-		err := requests.SendAllMetrics(client, metrics)
+		err := requests.SendAllMetrics(client, retryController, metrics)
 
 		if err != nil {
 			logger.Log.Debug("error sending metrics batch", zap.Error(err))

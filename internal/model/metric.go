@@ -3,6 +3,8 @@ package model
 import (
 	"errors"
 	"strconv"
+
+	"github.com/artem-benda/monitor/internal/dto"
 )
 
 const (
@@ -18,6 +20,13 @@ type MetricKey struct {
 }
 
 type MetricValue struct {
+	Gauge   float64
+	Counter int64
+}
+
+type MetricKeyWithValue struct {
+	Kind    string
+	Name    string
 	Gauge   float64
 	Counter int64
 }
@@ -50,13 +59,6 @@ func StringValue(metricKey MetricKey, val MetricValue) (string, error) {
 	return "", ErrInvalidMetricValue
 }
 
-type SaveableMetricValue struct {
-	Kind    string  `json:"kind"`
-	Name    string  `json:"name"`
-	Counter int64   `json:"counter,omitempty"`
-	Gauge   float64 `json:"gauge,omitempty"`
-}
-
-func AsSaveableMetric(key MetricKey, val MetricValue) SaveableMetricValue {
-	return SaveableMetricValue{Kind: key.Kind, Name: key.Name, Gauge: val.Gauge, Counter: val.Counter}
+func AsDto(key MetricKey, val MetricValue) dto.Metrics {
+	return dto.Metrics{MType: key.Kind, ID: key.Name, Value: &val.Gauge, Delta: &val.Counter}
 }

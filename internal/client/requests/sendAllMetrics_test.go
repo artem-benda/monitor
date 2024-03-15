@@ -27,5 +27,6 @@ func TestSendAllMetrics(t *testing.T) {
 	resty := resty.NewWithClient(client)
 	resty.SetBaseURL(srv.URL)
 	SendAllMetrics(resty, metrics)
-	assert.Equal(t, len(metrics), count)
+	// Вызов только один, отправили пачкой
+	assert.Equal(t, 1, count)
 }

@@ -12,6 +12,7 @@ type Storage interface {
 	UpsertGauge(ctx context.Context, key model.MetricKey, value model.MetricValue) error
 	UpsertCounterAndGet(ctx context.Context, key model.MetricKey, incCounter int64) (int64, error)
 	GetAll(ctx context.Context) (map[model.MetricKey]model.MetricValue, error)
+	UpsertBatch(ctx context.Context, metrics []model.MetricKeyWithValue) error
 }
 
 var (

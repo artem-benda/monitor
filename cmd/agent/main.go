@@ -10,6 +10,7 @@ import (
 	"github.com/artem-benda/monitor/internal/logger"
 	"github.com/artem-benda/monitor/internal/model"
 	"github.com/go-resty/resty/v2"
+	"go.uber.org/zap"
 )
 
 func main() {
@@ -37,7 +38,12 @@ func main() {
 	}()
 
 	for {
-		requests.SendAllMetrics(client, metrics)
+		err := requests.SendAllMetrics(client, metrics)
+
+		if err != nil {
+			logger.Log.Debug("error sending metrics batch", zap.Error(err))
+		}
+
 		storage.CounterStore.Reset()
 		time.Sleep(time.Duration(config.ReportInterval) * time.Second)
 	}

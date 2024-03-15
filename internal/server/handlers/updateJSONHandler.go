@@ -21,47 +21,42 @@ func MakeUpdateJSONHandler(store storage.Storage) http.HandlerFunc {
 		}
 
 		switch {
-		case model.ValidMetricKind(metrics.MType) && metrics.MType != "" && metrics.ID != "":
-			switch metrics.MType {
-			case model.GaugeKind:
-				{
-					if metrics.Value != nil {
-						var err error
-						*metrics.Value, err = service.UpdateAndGetGaugeMetric(r.Context(), store, metrics.ID, *metrics.Value)
-						if err != nil {
-							w.WriteHeader(http.StatusInternalServerError)
-						} else {
-							w.WriteHeader(http.StatusOK)
-							easyjson.MarshalToHTTPResponseWriter(metrics, w)
-						}
-					} else {
-						w.WriteHeader(http.StatusBadRequest)
-					}
-				}
-			case model.CounterKind:
-				{
-					if metrics.Delta != nil {
-						var err error
-						*metrics.Delta, err = service.UpdateAndGetCounterMetric(r.Context(), store, metrics.ID, *metrics.Delta)
-						if err != nil {
-							w.WriteHeader(http.StatusInternalServerError)
-						} else {
-							w.WriteHeader(http.StatusOK)
-							easyjson.MarshalToHTTPResponseWriter(metrics, w)
-						}
-					} else {
-						w.WriteHeader(http.StatusBadRequest)
-					}
-				}
-			default:
-				w.WriteHeader(http.StatusBadRequest)
-			}
 		case !model.ValidMetricKind(metrics.MType):
 			w.WriteHeader(http.StatusBadRequest)
+			return
 		case metrics.ID == "":
 			w.WriteHeader(http.StatusNotFound)
-		default:
+			return
+		case metrics.MType == "":
 			w.WriteHeader(http.StatusNotImplemented)
+			return
+		case metrics.MType == model.GaugeKind && metrics.Value == nil:
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		case metrics.MType == model.CounterKind && metrics.Delta == nil:
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		case metrics.MType == model.GaugeKind:
+			var err error
+			*metrics.Value, err = service.UpdateAndGetGaugeMetric(r.Context(), store, metrics.ID, *metrics.Value)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+			} else {
+				w.WriteHeader(http.StatusOK)
+				easyjson.MarshalToHTTPResponseWriter(metrics, w)
+			}
+		case metrics.MType == model.CounterKind:
+			var err error
+			*metrics.Delta, err = service.UpdateAndGetCounterMetric(r.Context(), store, metrics.ID, *metrics.Delta)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+			} else {
+				w.WriteHeader(http.StatusOK)
+				easyjson.MarshalToHTTPResponseWriter(metrics, w)
+			}
+		default:
+			w.WriteHeader(http.StatusBadRequest)
+			return
 		}
 	}
 }

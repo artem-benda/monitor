@@ -26,7 +26,7 @@ func NewDBStorage(dbpool *pgxpool.Pool, r retry.RetryController) Storage {
 	return dbStorage{dbpool: dbpool, withRetry: r}
 }
 
-func (s dbStorage) Get(ctx context.Context, key model.MetricKey) (m model.MetricValue, ok bool, err error) {
+func (s dbStorage) Get(ctx context.Context, key model.MetricKey) (m *model.MetricValue, ok bool, err error) {
 	err = s.withRetry.Run(func() error {
 		m, ok, err = s.get(ctx, key)
 		return mapError(err)
@@ -66,7 +66,7 @@ func (s dbStorage) UpsertBatch(ctx context.Context, metrics []model.MetricKeyWit
 	return
 }
 
-func (s dbStorage) get(ctx context.Context, key model.MetricKey) (model.MetricValue, bool, error) {
+func (s dbStorage) get(ctx context.Context, key model.MetricKey) (*model.MetricValue, bool, error) {
 	var (
 		mtype   string
 		mname   string
@@ -83,23 +83,23 @@ func (s dbStorage) get(ctx context.Context, key model.MetricKey) (model.MetricVa
 	case errors.Is(err, pgx.ErrNoRows):
 		{
 			logger.Log.Debug("metric not found")
-			return model.MetricValue{}, false, nil
+			return nil, false, nil
 		}
 	case err != nil:
 		{
 			logger.Log.Debug("get metric error", zap.String("Kind", key.Kind), zap.String("Name", key.Name), zap.Error(err))
-			return model.MetricValue{}, false, err
+			return nil, false, err
 		}
 	case key.Kind == model.GaugeKind && gauge.Valid:
 		{
-			return model.MetricValue{Gauge: gauge.Float64}, true, nil
+			return &model.MetricValue{Gauge: gauge.Float64}, true, nil
 		}
 	case key.Kind == model.CounterKind && counter.Valid:
 		{
-			return model.MetricValue{Counter: counter.Int64}, true, nil
+			return &model.MetricValue{Counter: counter.Int64}, true, nil
 		}
 	}
-	return model.MetricValue{}, false, errInvalidData
+	return nil, false, errInvalidData
 }
 
 func (s dbStorage) upsertGauge(ctx context.Context, key model.MetricKey, value model.MetricValue) error {

@@ -70,11 +70,11 @@ func NewMemStorage(saveIntervalSec int, filename string, restore bool) (Storage,
 	return &s, nil
 }
 
-func (m memStorage) Get(ctx context.Context, key model.MetricKey) (model.MetricValue, bool, error) {
+func (m memStorage) Get(ctx context.Context, key model.MetricKey) (*model.MetricValue, bool, error) {
 	m.rw.RLock()
 	defer m.rw.RUnlock()
 	value, ok := m.values[key]
-	return value, ok, nil
+	return &value, ok, nil
 }
 
 func (m *memStorage) UpsertGauge(ctx context.Context, key model.MetricKey, value model.MetricValue) error {

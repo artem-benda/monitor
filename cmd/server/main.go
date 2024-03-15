@@ -65,13 +65,13 @@ func newAppRouter() *chi.Mux {
 }
 
 func initDB(dbpool *pgxpool.Pool) {
-	createTblMetrics := "CREATE TABLE IF NOT EXISTS metrics(" +
-		"mtype text NOT NULL," +
-		"mname text NOT NULL," +
-		"gauge double precision," +
-		"counter bigint," +
-		"PRIMARY KEY (mtype, mname)" +
-		")"
+	createTblMetrics := `CREATE TABLE IF NOT EXISTS metrics(
+		mtype text NOT NULL,
+		mname text NOT NULL,
+		gauge double precision,
+		counter bigint,
+		PRIMARY KEY (mtype, mname)
+		)`
 	_, err := dbpool.Exec(context.Background(), createTblMetrics)
 	if err != nil {
 		panic(err)

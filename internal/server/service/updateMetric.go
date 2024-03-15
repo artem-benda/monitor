@@ -53,6 +53,5 @@ func UpdateAndGetGaugeMetric(ctx context.Context, s storage.Storage, name string
 
 func UpdateAndGetCounterMetric(ctx context.Context, s storage.Storage, name string, value int64) (int64, error) {
 	key := model.MetricKey{Kind: model.CounterKind, Name: name}
-	next, err := s.UpsertCounterAndGet(ctx, key, value)
-	return next, err
+	return s.UpsertCounterAndGet(ctx, key, value)
 }

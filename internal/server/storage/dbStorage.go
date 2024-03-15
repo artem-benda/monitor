@@ -18,16 +18,16 @@ import (
 )
 
 type dbStorage struct {
-	dbpool *pgxpool.Pool
-	c      retry.RetryController
+	dbpool    *pgxpool.Pool
+	withRetry retry.RetryController
 }
 
 func NewDBStorage(dbpool *pgxpool.Pool, r retry.RetryController) Storage {
-	return dbStorage{dbpool: dbpool, c: r}
+	return dbStorage{dbpool: dbpool, withRetry: r}
 }
 
 func (s dbStorage) Get(ctx context.Context, key model.MetricKey) (m model.MetricValue, ok bool, err error) {
-	err = s.c.Run(func() error {
+	err = s.withRetry.Run(func() error {
 		m, ok, err = s.get(ctx, key)
 		return mapError(err)
 	})
@@ -35,7 +35,7 @@ func (s dbStorage) Get(ctx context.Context, key model.MetricKey) (m model.Metric
 }
 
 func (s dbStorage) UpsertGauge(ctx context.Context, key model.MetricKey, value model.MetricValue) (err error) {
-	err = s.c.Run(func() error {
+	err = s.withRetry.Run(func() error {
 		err = s.upsertGauge(ctx, key, value)
 		return mapError(err)
 	})
@@ -43,7 +43,7 @@ func (s dbStorage) UpsertGauge(ctx context.Context, key model.MetricKey, value m
 }
 
 func (s dbStorage) UpsertCounterAndGet(ctx context.Context, key model.MetricKey, incCounter int64) (cnt int64, err error) {
-	err = s.c.Run(func() error {
+	err = s.withRetry.Run(func() error {
 		cnt, err = s.upsertCounterAndGet(ctx, key, incCounter)
 		return mapError(err)
 	})
@@ -51,7 +51,7 @@ func (s dbStorage) UpsertCounterAndGet(ctx context.Context, key model.MetricKey,
 }
 
 func (s dbStorage) GetAll(ctx context.Context) (m map[model.MetricKey]model.MetricValue, err error) {
-	err = s.c.Run(func() error {
+	err = s.withRetry.Run(func() error {
 		m, err = s.getAll(ctx)
 		return mapError(err)
 	})
@@ -59,7 +59,7 @@ func (s dbStorage) GetAll(ctx context.Context) (m map[model.MetricKey]model.Metr
 }
 
 func (s dbStorage) UpsertBatch(ctx context.Context, metrics []model.MetricKeyWithValue) (err error) {
-	err = s.c.Run(func() error {
+	err = s.withRetry.Run(func() error {
 		err = s.upsertBatch(ctx, metrics)
 		return mapError(err)
 	})

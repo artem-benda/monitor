@@ -3,6 +3,8 @@ package requests
 import (
 	"bytes"
 	"compress/gzip"
+	"crypto/hmac"
+	"crypto/sha256"
 	"fmt"
 	"net/http"
 
@@ -14,7 +16,7 @@ import (
 	"github.com/mailru/easyjson"
 )
 
-func SendAllMetrics(c *resty.Client, withRetry retry.RetryController, metrics map[model.MetricKey]model.MetricValue) error {
+func SendAllMetrics(c *resty.Client, withRetry retry.RetryController, metrics map[model.MetricKey]model.MetricValue, signingKey []byte) error {
 	dtos := make(dto.MetricsBatch, 0)
 
 	for k, v := range metrics {
@@ -40,7 +42,7 @@ func SendAllMetrics(c *resty.Client, withRetry retry.RetryController, metrics ma
 	var resp *resty.Response
 
 	err = withRetry.Run(func() (err error) {
-		resp, err = sendBytes(c, b.Bytes())
+		resp, err = sendBytes(c, b.Bytes(), signingKey)
 		return
 	})
 
@@ -55,11 +57,24 @@ func SendAllMetrics(c *resty.Client, withRetry retry.RetryController, metrics ma
 
 }
 
-func sendBytes(resty *resty.Client, b []byte) (*resty.Response, error) {
-	resp, err := resty.R().
+func sendBytes(resty *resty.Client, b []byte, signingKey []byte) (*resty.Response, error) {
+	var signature []byte
+	if len(signingKey) > 0 {
+		h := hmac.New(sha256.New, signingKey)
+		signature = h.Sum(b)
+	}
+
+	request := resty.R().
 		SetBody(b).
 		SetHeader("Content-Encoding", "gzip").
-		SetHeader("Content-Type", "application/json").
+		SetHeader("Content-Type", "application/json")
+
+	if signature != nil {
+		request = request.
+			SetHeader("HashSHA256", string(signature))
+	}
+
+	resp, err := request.
 		Post("/updates/")
 
 	if err != nil {

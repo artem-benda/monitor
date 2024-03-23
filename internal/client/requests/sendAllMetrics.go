@@ -3,8 +3,6 @@ package requests
 import (
 	"bytes"
 	"compress/gzip"
-	"crypto/hmac"
-	"crypto/sha256"
 	"fmt"
 	"net/http"
 
@@ -12,6 +10,7 @@ import (
 	"github.com/artem-benda/monitor/internal/dto"
 	"github.com/artem-benda/monitor/internal/model"
 	"github.com/artem-benda/monitor/internal/retry"
+	"github.com/artem-benda/monitor/internal/signer"
 	"github.com/go-resty/resty/v2"
 	"github.com/mailru/easyjson"
 )
@@ -60,8 +59,7 @@ func SendAllMetrics(c *resty.Client, withRetry retry.RetryController, metrics ma
 func sendBytes(resty *resty.Client, b []byte, signingKey []byte) (*resty.Response, error) {
 	var signature []byte
 	if len(signingKey) > 0 {
-		h := hmac.New(sha256.New, signingKey)
-		signature = h.Sum(b)
+		signature = signer.Sign(b, signingKey)
 	}
 
 	request := resty.R().

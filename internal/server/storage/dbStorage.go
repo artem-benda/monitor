@@ -14,6 +14,7 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
+	"golang.org/x/exp/slices"
 )
 
 type dbStorage struct {
@@ -197,14 +198,13 @@ func (s dbStorage) getAll(ctx context.Context) (map[model.MetricKey]model.Metric
 
 func (s dbStorage) upsertBatch(ctx context.Context, metrics []model.MetricKeyWithValue) error {
 	// Сортировка для исключения deadlocks при параллельном обновлении пачек метрик
-	/*
-		sort.Slice(metrics, func(i, j int) bool {
-			if metrics[i].Name != metrics[j].Name {
-				return metrics[i].Name < metrics[j].Name
-			} else {
-				return metrics[i].Kind < metrics[j].Kind
-			}
-		})*/
+	slices.SortFunc(metrics, func(i, j int) bool {
+		if metrics[i].Name != metrics[j].Name {
+			return metrics[i].Name < metrics[j].Name
+		} else {
+			return metrics[i].Kind < metrics[j].Kind
+		}
+	})
 
 	tx, err := s.dbpool.Begin(ctx)
 

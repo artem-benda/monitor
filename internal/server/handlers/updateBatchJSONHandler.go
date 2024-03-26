@@ -53,8 +53,10 @@ func MakeUpdateBatchJSONHandler(store storage.Storage) http.HandlerFunc {
 				w.WriteHeader(http.StatusBadRequest)
 				return
 			case dto.MType == model.GaugeKind:
+				logger.Log.Debug("Adding dto... valid gauge", zap.String("kind", dto.MType), zap.String("name", dto.ID), zap.Float64("gauge", *dto.Value))
 				models = append(models, model.MetricKeyWithValue{Kind: dto.MType, Name: dto.ID, Gauge: *dto.Value})
 			case dto.MType == model.CounterKind:
+				logger.Log.Debug("Adding dto... valid counter", zap.String("kind", dto.MType), zap.String("name", dto.ID), zap.Int64("counter", *dto.Delta))
 				models = append(models, model.MetricKeyWithValue{Kind: dto.MType, Name: dto.ID, Counter: *dto.Delta})
 			default:
 				w.WriteHeader(http.StatusBadRequest)

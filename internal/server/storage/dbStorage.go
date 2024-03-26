@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"sort"
 
 	"github.com/artem-benda/monitor/internal/logger"
 	"github.com/artem-benda/monitor/internal/model"
@@ -198,13 +197,14 @@ func (s dbStorage) getAll(ctx context.Context) (map[model.MetricKey]model.Metric
 
 func (s dbStorage) upsertBatch(ctx context.Context, metrics []model.MetricKeyWithValue) error {
 	// Сортировка для исключения deadlocks при параллельном обновлении пачек метрик
-	sort.Slice(metrics, func(i, j int) bool {
-		if metrics[i].Name != metrics[j].Name {
-			return metrics[i].Name < metrics[j].Name
-		} else {
-			return metrics[i].Kind < metrics[j].Kind
-		}
-	})
+	/*
+		sort.Slice(metrics, func(i, j int) bool {
+			if metrics[i].Name != metrics[j].Name {
+				return metrics[i].Name < metrics[j].Name
+			} else {
+				return metrics[i].Kind < metrics[j].Kind
+			}
+		})*/
 
 	tx, err := s.dbpool.Begin(ctx)
 

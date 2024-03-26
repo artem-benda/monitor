@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"sort"
 
 	"github.com/artem-benda/monitor/internal/logger"
 	"github.com/artem-benda/monitor/internal/model"
@@ -14,7 +15,6 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
-	"golang.org/x/exp/slices"
 )
 
 type dbStorage struct {
@@ -198,7 +198,7 @@ func (s dbStorage) getAll(ctx context.Context) (map[model.MetricKey]model.Metric
 
 func (s dbStorage) upsertBatch(ctx context.Context, metrics []model.MetricKeyWithValue) error {
 	// Сортировка для исключения deadlocks при параллельном обновлении пачек метрик
-	slices.SortFunc(metrics, func(i, j int) bool {
+	sort.Slice(metrics, func(i, j int) bool {
 		if metrics[i].Name != metrics[j].Name {
 			return metrics[i].Name < metrics[j].Name
 		} else {
@@ -209,6 +209,7 @@ func (s dbStorage) upsertBatch(ctx context.Context, metrics []model.MetricKeyWit
 	tx, err := s.dbpool.Begin(ctx)
 
 	if err != nil {
+		logger.Log.Debug("Start tx error", zap.Error(err))
 		return err
 	}
 
@@ -223,6 +224,7 @@ func (s dbStorage) upsertBatch(ctx context.Context, metrics []model.MetricKeyWit
 	)
 
 	if err != nil {
+		logger.Log.Debug("Prepare statement error", zap.Error(err))
 		return err
 	}
 
@@ -231,12 +233,14 @@ func (s dbStorage) upsertBatch(ctx context.Context, metrics []model.MetricKeyWit
 		_, err := tx.Exec(ctx, "upsert-metrics", m.Kind, m.Name, m.Gauge, m.Counter)
 
 		if err != nil {
+			logger.Log.Debug("Updating metric error", zap.Error(err))
 			return err
 		}
 	}
 	err = tx.Commit(ctx)
 
 	if err != nil {
+		logger.Log.Debug("Commit error", zap.Error(err))
 		return err
 	}
 

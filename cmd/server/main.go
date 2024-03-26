@@ -10,6 +10,7 @@ import (
 	"github.com/artem-benda/monitor/internal/server/errors"
 	"github.com/artem-benda/monitor/internal/server/handlers"
 	"github.com/artem-benda/monitor/internal/server/storage"
+	"github.com/artem-benda/monitor/internal/signer"
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -52,6 +53,7 @@ func newAppRouter() *chi.Mux {
 	r := chi.NewRouter()
 	r.Use(logger.LoggerMiddleware)
 	r.Use(gzipper.GzipMiddleware)
+	r.Use(signer.CreateVerifyAndSignMiddleware([]byte(config.Key)))
 	r.Route("/", func(r chi.Router) {
 		r.Get("/", handlers.MakeGetAllHandler(store))
 		r.Post("/update/{metricType}/{metricName}/{metricValue}", handlers.MakeUpdatePathHandler(store))

@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-const HASH_HEADER = "HashSHA256"
+const hashHeader = "HashSHA256"
 
 type signWriter struct {
 	w   http.ResponseWriter

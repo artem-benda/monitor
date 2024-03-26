@@ -227,6 +227,7 @@ func (s dbStorage) upsertBatch(ctx context.Context, metrics []model.MetricKeyWit
 	}
 
 	for _, m := range metrics {
+		logger.Log.Debug("Updating metric", zap.String("kind", m.Kind), zap.String("name", m.Name), zap.Int64("counter", m.Counter), zap.Float64("gauge", m.Gauge))
 		_, err := tx.Exec(ctx, "upsert-metrics", m.Kind, m.Name, m.Gauge, m.Counter)
 
 		if err != nil {

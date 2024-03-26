@@ -24,6 +24,8 @@ func MakeUpdateBatchJSONHandler(store storage.Storage) http.HandlerFunc {
 			return
 		}
 
+		logger.Log.Debug("MakeUpdateBatchJSONHandler, got dtos", zap.Int("count", len(dtos)))
+
 		if len(dtos) == 0 {
 			w.WriteHeader(http.StatusOK)
 			return
@@ -32,6 +34,7 @@ func MakeUpdateBatchJSONHandler(store storage.Storage) http.HandlerFunc {
 		models := make([]model.MetricKeyWithValue, len(dtos))
 
 		for _, dto := range dtos {
+			logger.Log.Debug("Adding dto...", zap.String("kind", dto.MType), zap.String("name", dto.ID))
 
 			switch {
 			case !model.ValidMetricKind(dto.MType):

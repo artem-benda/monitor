@@ -64,7 +64,7 @@ func CreateVerifyAndSignMiddleware(signingKey []byte) func(http.Handler) http.Ha
 
 			// проверяем, что клиент прислал запрос с подписью
 			signatureHeaderValue := r.Header.Get(HashHeader)
-			if len(signatureHeaderValue) > 0 {
+			if len(signatureHeaderValue) > 0 && len(signingKey) > 0 {
 				signature := []byte(signatureHeaderValue)
 				// меняем тело запроса на новое
 				b, err := io.ReadAll(r.Body)
@@ -76,7 +76,9 @@ func CreateVerifyAndSignMiddleware(signingKey []byte) func(http.Handler) http.Ha
 					w.WriteHeader(http.StatusBadRequest)
 					return
 				}
+			}
 
+			if len(signingKey) > 0 {
 				sw := newSignWriter(w, signingKey)
 				ow = sw
 				// Вычисляем подпись, устанавливаем заголовок и записываем тело запроса из буффера

@@ -40,7 +40,7 @@ func (c *signWriter) WriteHeader(statusCode int) {
 func (c *signWriter) WriteSigAndBody() {
 	b := c.buf.Bytes()
 	signature := Sign(b, c.key)
-	c.w.Header().Add(HASH_HEADER, string(signature))
+	c.w.Header().Add(hashHeader, string(signature))
 	c.w.Write(b)
 }
 
@@ -63,7 +63,7 @@ func CreateVerifyAndSignMiddleware(signingKey []byte) func(http.Handler) http.Ha
 			ow := w
 
 			// проверяем, что клиент прислал запрос с подписью
-			signatureHeaderValue := r.Header.Get("HashSHA256")
+			signatureHeaderValue := r.Header.Get(hashHeader)
 			if len(signatureHeaderValue) > 0 {
 				signature := []byte(signatureHeaderValue)
 				// меняем тело запроса на новое

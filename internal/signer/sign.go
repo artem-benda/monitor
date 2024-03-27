@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/hmac"
 	"crypto/sha256"
+	"encoding/base64"
 	"io"
 	"net/http"
 )
@@ -40,7 +41,8 @@ func (c *signWriter) WriteHeader(statusCode int) {
 func (c *signWriter) WriteSigAndBody() {
 	b := c.buf.Bytes()
 	signature := Sign(b, c.key)
-	c.w.Header().Add(HashHeader, string(signature))
+	signatureBase64 := base64.StdEncoding.EncodeToString(signature)
+	c.w.Header().Add(HashHeader, signatureBase64)
 	c.w.Write(b)
 }
 
@@ -65,7 +67,11 @@ func CreateVerifyAndSignMiddleware(signingKey []byte) func(http.Handler) http.Ha
 			// проверяем, что клиент прислал запрос с подписью
 			signatureHeaderValue := r.Header.Get(HashHeader)
 			if len(signatureHeaderValue) > 0 && len(signingKey) > 0 {
-				signature := []byte(signatureHeaderValue)
+				signature, err := base64.StdEncoding.DecodeString(signatureHeaderValue)
+				if err != nil {
+					w.WriteHeader(http.StatusInternalServerError)
+					return
+				}
 				// меняем тело запроса на новое
 				b, err := io.ReadAll(r.Body)
 				if err != nil {

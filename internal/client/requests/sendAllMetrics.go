@@ -3,16 +3,19 @@ package requests
 import (
 	"bytes"
 	"compress/gzip"
+	"encoding/base64"
 	"fmt"
 	"net/http"
 
 	"github.com/artem-benda/monitor/internal/client/errors"
 	"github.com/artem-benda/monitor/internal/dto"
+	"github.com/artem-benda/monitor/internal/logger"
 	"github.com/artem-benda/monitor/internal/model"
 	"github.com/artem-benda/monitor/internal/retry"
 	"github.com/artem-benda/monitor/internal/signer"
 	"github.com/go-resty/resty/v2"
 	"github.com/mailru/easyjson"
+	"go.uber.org/zap"
 )
 
 func SendAllMetrics(c *resty.Client, withRetry retry.RetryController, metrics map[model.MetricKey]model.MetricValue, signingKey []byte) error {
@@ -57,9 +60,10 @@ func SendAllMetrics(c *resty.Client, withRetry retry.RetryController, metrics ma
 }
 
 func sendBytes(resty *resty.Client, b []byte, signingKey []byte) (*resty.Response, error) {
-	var signature []byte
+	var signatureBase64 string
 	if len(signingKey) > 0 {
-		signature = signer.Sign(b, signingKey)
+		signature := signer.Sign(b, signingKey)
+		signatureBase64 = base64.StdEncoding.EncodeToString(signature)
 	}
 
 	request := resty.R().
@@ -67,15 +71,16 @@ func sendBytes(resty *resty.Client, b []byte, signingKey []byte) (*resty.Respons
 		SetHeader("Content-Encoding", "gzip").
 		SetHeader("Content-Type", "application/json")
 
-	if signature != nil {
+	if signatureBase64 != "" {
 		request = request.
-			SetHeader("HashSHA256", string(signature))
+			SetHeader("HashSHA256", signatureBase64)
 	}
 
 	resp, err := request.
 		Post("/updates/")
 
 	if err != nil {
+		logger.Log.Debug("Error sending metrics", zap.Error(err))
 		return nil, errors.ErrNetwork{Err: err}
 	}
 

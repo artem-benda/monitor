@@ -26,6 +26,9 @@ func main() {
 
 	client := resty.New()
 	serverEndpointURL := fmt.Sprintf("http://%s", config.ServerEndpoint)
+
+	logger.Log.Debug("Starting with base URL", zap.String("baseURL", serverEndpointURL))
+
 	client.SetBaseURL(serverEndpointURL)
 	client.SetTimeout(30 * time.Second)
 	client.OnAfterResponse(logger.NewRestyResponseLogger())

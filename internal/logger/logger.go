@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/artem-benda/monitor/internal/signer"
 	"github.com/go-resty/resty/v2"
 	"go.uber.org/zap"
 )
@@ -54,7 +53,7 @@ func LoggerMiddleware(next http.Handler) http.Handler {
 			zap.String("path", r.URL.Path),
 			zap.String("encoding", r.Header.Get("Content-Encoding")),
 			zap.String("clientAccepts", r.Header.Get("Accept-Encoding")),
-			zap.String("signature", r.Header.Get(signer.HashHeader)),
+			zap.String("signature", r.Header.Get("HashSHA256")),
 			zap.Duration("duration", duration),
 			zap.Int("statusCode", responseData.statusCode),
 			zap.Int64("responseSizeBytes", responseData.sizeBytes),
@@ -68,7 +67,7 @@ func NewRestyResponseLogger() func(c *resty.Client, r *resty.Response) error {
 			zap.String("method", r.Request.Method),
 			zap.String("URL", r.Request.URL),
 			zap.String("status", r.Status()),
-			zap.String("signature", r.Header().Get(signer.HashHeader)),
+			zap.String("signature", r.Header().Get("HashSHA256")),
 			zap.Int64("responseSizeBytes", r.Size()),
 		)
 		return nil

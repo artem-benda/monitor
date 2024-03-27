@@ -7,6 +7,9 @@ import (
 	"encoding/base64"
 	"io"
 	"net/http"
+
+	"github.com/artem-benda/monitor/internal/logger"
+	"go.uber.org/zap"
 )
 
 const HashHeader = "HashSHA256"
@@ -38,23 +41,35 @@ func (c *signWriter) WriteHeader(statusCode int) {
 	c.w.WriteHeader(statusCode)
 }
 
-func (c *signWriter) WriteSigAndBody() {
+func (c *signWriter) WriteSigAndBody() error {
 	b := c.buf.Bytes()
-	signature := Sign(b, c.key)
+	signature, err := Sign(b, c.key)
+	if err != nil {
+		logger.Log.Debug("Error signing response", zap.Error(err))
+		return err
+	}
 	signatureBase64 := base64.StdEncoding.EncodeToString(signature)
 	c.w.Header().Add(HashHeader, signatureBase64)
 	c.w.Write(b)
+	return nil
 }
 
-func Sign(b []byte, signingKey []byte) []byte {
+func Sign(b []byte, signingKey []byte) ([]byte, error) {
 	h := hmac.New(sha256.New, signingKey)
-	return h.Sum(b)
+	_, err := h.Write(b)
+	if err != nil {
+		logger.Log.Debug("Error creating signature", zap.Error(err))
+	}
+	return h.Sum(nil), nil
 }
 
-func Verify(b []byte, signature []byte, signingKey []byte) bool {
-	h := hmac.New(sha256.New, signingKey)
-	expectedSignature := h.Sum(b)
-	return hmac.Equal(signature, expectedSignature)
+func Verify(b []byte, signature []byte, signingKey []byte) (bool, error) {
+	expectedSignature, err := Sign(b, signingKey)
+	if err != nil {
+		logger.Log.Debug("Error verifying signature", zap.Error(err))
+	}
+	logger.Log.Debug("Signatures", zap.String("actual", string(signature)), zap.String("expected", string(expectedSignature)))
+	return hmac.Equal(signature, expectedSignature), nil
 }
 
 func CreateVerifyAndSignMiddleware(signingKey []byte) func(http.Handler) http.Handler {
@@ -75,13 +90,20 @@ func CreateVerifyAndSignMiddleware(signingKey []byte) func(http.Handler) http.Ha
 				// меняем тело запроса на новое
 				b, err := io.ReadAll(r.Body)
 				if err != nil {
+					logger.Log.Debug("Error reading body", zap.Error(err))
 					w.WriteHeader(http.StatusInternalServerError)
 					return
 				}
-				if !Verify(b, signature, signingKey) {
+				if ok, err := Verify(b, signature, signingKey); err != nil {
+					logger.Log.Debug("Error verifying signature", zap.Error(err))
+					w.WriteHeader(http.StatusInternalServerError)
+					return
+				} else if !ok {
+					logger.Log.Debug("Invalid signature")
 					w.WriteHeader(http.StatusBadRequest)
 					return
 				}
+				r.Body = io.NopCloser(bytes.NewBuffer(b))
 			}
 
 			if len(signingKey) > 0 {

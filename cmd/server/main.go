@@ -52,8 +52,8 @@ func main() {
 func newAppRouter() *chi.Mux {
 	r := chi.NewRouter()
 	r.Use(logger.LoggerMiddleware)
-	r.Use(gzipper.GzipMiddleware)
 	r.Use(signer.CreateVerifyAndSignMiddleware([]byte(config.Key)))
+	r.Use(gzipper.GzipMiddleware)
 	r.Route("/", func(r chi.Router) {
 		r.Get("/", handlers.MakeGetAllHandler(store))
 		r.Post("/update/{metricType}/{metricName}/{metricValue}", handlers.MakeUpdatePathHandler(store))

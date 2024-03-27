@@ -62,7 +62,11 @@ func SendAllMetrics(c *resty.Client, withRetry retry.RetryController, metrics ma
 func sendBytes(resty *resty.Client, b []byte, signingKey []byte) (*resty.Response, error) {
 	var signatureBase64 string
 	if len(signingKey) > 0 {
-		signature := signer.Sign(b, signingKey)
+		signature, err := signer.Sign(b, signingKey)
+		if err != nil {
+			logger.Log.Debug("Error signing metrics", zap.Error(err))
+			return nil, err
+		}
 		signatureBase64 = base64.StdEncoding.EncodeToString(signature)
 	}
 

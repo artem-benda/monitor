@@ -12,7 +12,7 @@ var (
 	cpuUtilization1Metric = model.NewGaugeMetricKey("CPUutilization1")
 )
 
-func readPSUtilsMetrics() map[model.MetricKey]model.MetricValue {
+func ReadPSUtilsMetrics() map[model.MetricKey]model.MetricValue {
 	m := make(map[model.MetricKey]model.MetricValue)
 
 	v, _ := mem.VirtualMemory()

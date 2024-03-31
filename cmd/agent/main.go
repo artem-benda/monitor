@@ -107,7 +107,20 @@ func fanIn(chs ...<-chan map[model.MetricKey]model.MetricValue) <-chan map[model
 
 func sendMetricsWorker(id int, client *resty.Client, retryController retry.RetryController, in <-chan map[model.MetricKey]model.MetricValue) {
 	for {
-		metrics := <-in
+		metrics := make(map[model.MetricKey]model.MetricValue)
+	L:
+		for {
+			select {
+			// Выбираем все накопившиеся метрики и мерджим их
+			case m := <-in:
+				for k, v := range m {
+					metrics[k] = v
+				}
+			// Больше нечего читать, отправляем что выбрали
+			default:
+				break L
+			}
+		}
 		logger.Log.Debug("sending metrics", zap.Int("workerId", id))
 		err := requests.SendAllMetrics(client, retryController, metrics, []byte(config.Key))
 

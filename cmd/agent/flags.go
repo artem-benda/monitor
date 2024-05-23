@@ -11,6 +11,7 @@ type Config struct {
 	ReportInterval int    `env:"REPORT_INTERVAL"`
 	PollInterval   int    `env:"POLL_INTERVAL"`
 	LogLevel       string `env:"LOG_LEVEL"`
+	Key            string `env:"KEY"`
 }
 
 var config Config
@@ -20,6 +21,7 @@ func parseFlags() {
 	flag.IntVar(&config.ReportInterval, "r", 10, "send metrics delay in seconds")
 	flag.IntVar(&config.PollInterval, "p", 2, "poll runtime metrics delay in seconds")
 	flag.StringVar(&config.LogLevel, "l", "debug", "logging level: debug, info, warn, error, dpanic, panic, fatal")
+	flag.StringVar(&config.Key, "k", "", "if set, header with signature will be added to requests")
 	flag.Parse()
 
 	if err := env.Parse(&config); err != nil {

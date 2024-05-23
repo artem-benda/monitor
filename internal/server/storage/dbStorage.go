@@ -209,6 +209,7 @@ func (s dbStorage) upsertBatch(ctx context.Context, metrics []model.MetricKeyWit
 	tx, err := s.dbpool.Begin(ctx)
 
 	if err != nil {
+		logger.Log.Debug("Start tx error", zap.Error(err))
 		return err
 	}
 
@@ -223,19 +224,23 @@ func (s dbStorage) upsertBatch(ctx context.Context, metrics []model.MetricKeyWit
 	)
 
 	if err != nil {
+		logger.Log.Debug("Prepare statement error", zap.Error(err))
 		return err
 	}
 
 	for _, m := range metrics {
+		logger.Log.Debug("Updating metric", zap.String("kind", m.Kind), zap.String("name", m.Name), zap.Int64("counter", m.Counter), zap.Float64("gauge", m.Gauge))
 		_, err := tx.Exec(ctx, "upsert-metrics", m.Kind, m.Name, m.Gauge, m.Counter)
 
 		if err != nil {
+			logger.Log.Debug("Updating metric error", zap.Error(err))
 			return err
 		}
 	}
 	err = tx.Commit(ctx)
 
 	if err != nil {
+		logger.Log.Debug("Commit error", zap.Error(err))
 		return err
 	}
 

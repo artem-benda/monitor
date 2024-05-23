@@ -5,6 +5,9 @@ import (
 	"sync"
 	"time"
 
+	"net/http"
+	_ "net/http/pprof" // подключаем пакет pprof
+
 	"github.com/artem-benda/monitor/internal/client/errors"
 	"github.com/artem-benda/monitor/internal/client/requests"
 	"github.com/artem-benda/monitor/internal/client/service"
@@ -16,7 +19,10 @@ import (
 	"go.uber.org/zap"
 )
 
-const metricsCacheSize = 10
+const (
+	metricsCacheSize = 10
+	addr             = ":8089" // адрес сервера pprof
+)
 
 func main() {
 	parseFlags()
@@ -47,10 +53,12 @@ func main() {
 		go sendMetricsWorker(i, client, retryController, metricsCh)
 	}
 
-	var wg sync.WaitGroup
-	wg.Add(1)
+	http.ListenAndServe(addr, nil) // запускаем сервер pprof
+
+	// var wg sync.WaitGroup
+	// wg.Add(1)
 	// Wait forever
-	wg.Wait()
+	// wg.Wait()
 }
 
 func genStdMetrics() <-chan map[model.MetricKey]model.MetricValue {

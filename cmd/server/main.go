@@ -4,6 +4,8 @@ import (
 	"context"
 	"net/http"
 
+	_ "net/http/pprof" // подключаем пакет pprof
+
 	"github.com/artem-benda/monitor/internal/gzipper"
 	"github.com/artem-benda/monitor/internal/logger"
 	"github.com/artem-benda/monitor/internal/retry"
@@ -12,6 +14,7 @@ import (
 	"github.com/artem-benda/monitor/internal/server/storage"
 	"github.com/artem-benda/monitor/internal/signer"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -54,6 +57,9 @@ func newAppRouter() *chi.Mux {
 	r.Use(logger.LoggerMiddleware)
 	r.Use(signer.CreateVerifyAndSignMiddleware([]byte(config.Key)))
 	r.Use(gzipper.GzipMiddleware)
+
+	r.Mount("/debug", middleware.Profiler())
+
 	r.Route("/", func(r chi.Router) {
 		r.Get("/", handlers.MakeGetAllHandler(store))
 		r.Post("/update/{metricType}/{metricName}/{metricValue}", handlers.MakeUpdatePathHandler(store))

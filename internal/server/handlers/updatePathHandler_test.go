@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"github.com/go-chi/chi/v5"
 	"io"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -117,4 +119,17 @@ func TestMakeUpdatePathHandler(t *testing.T) {
 			assert.Equal(t, test.want.contentType, res.Header.Get("Content-Type"))
 		})
 	}
+}
+
+func ExampleMakeUpdatePathHandler() {
+	memStorage, err := storage.NewMemStorage(100, "", false)
+	if err != nil {
+		panic(err)
+	}
+
+	handler := MakeUpdatePathHandler(memStorage)
+
+	r := chi.NewRouter()
+	r.Post("/update/{metricType}/{metricName}/{metricValue}", handler)
+	log.Fatal(http.ListenAndServe(":8080", r))
 }

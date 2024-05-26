@@ -10,6 +10,7 @@ import (
 	"github.com/mailru/easyjson"
 )
 
+// MakeUpdateJSONHandler - создать обработчик метода обновления значения указанной метрики из JSON
 func MakeUpdateJSONHandler(store storage.Storage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-type", "application/json")

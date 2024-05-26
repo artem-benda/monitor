@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+// MakeGetHandler - создать обработчик метода получения значения указанной метрики
 func MakeGetHandler(store storage.Storage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-type", "text/plain")

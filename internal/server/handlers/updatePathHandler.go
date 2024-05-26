@@ -9,6 +9,7 @@ import (
 	"github.com/artem-benda/monitor/internal/server/storage"
 )
 
+// MakeUpdatePathHandler - создать обработчик метода обновления значения указанной метрики из url path
 func MakeUpdatePathHandler(store storage.Storage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-type", "text/plain")

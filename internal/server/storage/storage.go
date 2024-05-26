@@ -7,6 +7,7 @@ import (
 	"github.com/artem-benda/monitor/internal/model"
 )
 
+// Storage - интерфейс абстрактного хранилища сервера приложения
 type Storage interface {
 	Get(ctx context.Context, key model.MetricKey) (*model.MetricValue, bool, error)
 	UpsertGauge(ctx context.Context, key model.MetricKey, value model.MetricValue) error
@@ -15,6 +16,7 @@ type Storage interface {
 	UpsertBatch(ctx context.Context, metrics []model.MetricKeyWithValue) error
 }
 
+// Ошибки операций с хранилищем, не привязанные к конкретной реализации
 var (
 	errInvaligArgument  = errors.New("invalid argument")
 	errNullCounterValue = errors.New("null counter value")

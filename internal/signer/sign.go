@@ -50,10 +50,11 @@ func (c *signWriter) WriteSigAndBody() error {
 	}
 	signatureBase64 := base64.StdEncoding.EncodeToString(signature)
 	c.w.Header().Add(HashHeader, signatureBase64)
-	c.w.Write(b)
-	return nil
+	_, err = c.w.Write(b)
+	return err
 }
 
+// Sign - Вычислить подпись для слайса байт с указанным ключом с использованием алгоритма hmac-sha256
 func Sign(b []byte, signingKey []byte) ([]byte, error) {
 	h := hmac.New(sha256.New, signingKey)
 	_, err := h.Write(b)
@@ -63,6 +64,7 @@ func Sign(b []byte, signingKey []byte) ([]byte, error) {
 	return h.Sum(nil), nil
 }
 
+// Verify - Проверить подпись для слайса байт с использованием алгоритма hmac-sha256
 func Verify(b []byte, signature []byte, signingKey []byte) (bool, error) {
 	expectedSignature, err := Sign(b, signingKey)
 	if err != nil {
@@ -72,6 +74,7 @@ func Verify(b []byte, signature []byte, signingKey []byte) (bool, error) {
 	return hmac.Equal(signature, expectedSignature), nil
 }
 
+// CreateVerifyAndSignMiddleware - создать новый middleware для проверки и формирования подписи с указанным ключом
 func CreateVerifyAndSignMiddleware(signingKey []byte) func(http.Handler) http.Handler {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

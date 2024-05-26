@@ -9,6 +9,7 @@ import (
 	"go.uber.org/zap"
 )
 
+// MakePingDatabaseHandler - создать обработчик метода проверки статуса соединения с хранилищем
 func MakePingDatabaseHandler(dbpool *pgxpool.Pool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if dbpool == nil {

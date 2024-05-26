@@ -18,6 +18,7 @@ import (
 	"go.uber.org/zap"
 )
 
+// SendAllMetrics - Отправить значения метрик на сервер
 func SendAllMetrics(c *resty.Client, withRetry retry.RetryController, metrics map[model.MetricKey]model.MetricValue, signingKey []byte) error {
 	dtos := make(dto.MetricsBatch, 0)
 

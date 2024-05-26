@@ -22,6 +22,7 @@ type dbStorage struct {
 	withRetry retry.RetryController
 }
 
+// NewMemStorage - создать новое хранилище в БД Postgres
 func NewDBStorage(dbpool *pgxpool.Pool, r retry.RetryController) Storage {
 	return dbStorage{dbpool: dbpool, withRetry: r}
 }

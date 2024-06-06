@@ -8,6 +8,7 @@ import (
 	"github.com/artem-benda/monitor/internal/server/storage"
 )
 
+// MakeGetAllHandler - создать обработчик метода получения списка всех актуальных значений метрик
 func MakeGetAllHandler(store storage.Storage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-type", "text/html")

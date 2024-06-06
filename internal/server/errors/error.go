@@ -1,5 +1,6 @@
 package errors
 
+// ErrStorageConnection - Обобщенная ошибка доступа к хранилищу
 type ErrStorageConnection struct {
 	Err error
 }

@@ -19,6 +19,8 @@ type memStorage struct {
 	writeImmediate bool
 }
 
+// NewMemStorage - создать новое хранилище в памяти с поддержкой сохранения и восстановления
+// состояния в/из файла json
 func NewMemStorage(saveIntervalSec int, filename string, restore bool) (Storage, error) {
 	var metrics = make(map[model.MetricKey]model.MetricValue)
 	var savedMetrics dto.MetricsBatch

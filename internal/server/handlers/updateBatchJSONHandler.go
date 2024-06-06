@@ -12,6 +12,7 @@ import (
 	"go.uber.org/zap"
 )
 
+// MakeUpdateBatchJSONHandler - создать обработчик метода обновления значений метрик из JSON
 func MakeUpdateBatchJSONHandler(store storage.Storage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-type", "application/json")

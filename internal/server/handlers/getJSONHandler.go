@@ -10,6 +10,7 @@ import (
 	"github.com/mailru/easyjson"
 )
 
+// MakeGetJSONHandler - создать обработчик метода получения списка всех актуальных значений метрик в виде JSON
 func MakeGetJSONHandler(store storage.Storage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-type", "application/json")

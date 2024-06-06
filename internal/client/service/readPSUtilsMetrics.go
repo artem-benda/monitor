@@ -12,6 +12,7 @@ var (
 	cpuUtilization1Metric = model.NewGaugeMetricKey("CPUutilization1")
 )
 
+// ReadPSUtilsMetrics - Получить текущие расширенные значения метрик gopsutil
 func ReadPSUtilsMetrics() map[model.MetricKey]model.MetricValue {
 	m := make(map[model.MetricKey]model.MetricValue)
 

@@ -10,6 +10,7 @@ import (
 
 var Log *zap.Logger = zap.NewNop()
 
+// Initialize - инициализировать логгер zap с указанным уровнем логирования level
 func Initialize(level string) error {
 	lvl, err := zap.ParseAtomicLevel(level)
 	if err != nil {
@@ -61,6 +62,7 @@ func LoggerMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+// NewRestyResponseLogger - Создать новый middleware logger для клиента Resty
 func NewRestyResponseLogger() func(c *resty.Client, r *resty.Response) error {
 	return func(c *resty.Client, r *resty.Response) error {
 		Log.Debug("resty: server response",

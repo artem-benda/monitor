@@ -40,6 +40,7 @@ var (
 	randomValueMetric   = model.NewGaugeMetricKey("RandomValue")
 )
 
+// ReadMetrics - Получить актуальные значения метрик в виде мапы
 func ReadMetrics(counter storage.Counter) map[model.MetricKey]model.MetricValue {
 	var stats runtime.MemStats
 	runtime.ReadMemStats(&stats)

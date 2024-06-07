@@ -13,16 +13,23 @@ import (
 	"github.com/artem-benda/monitor/internal/server/handlers"
 	"github.com/artem-benda/monitor/internal/server/storage"
 	"github.com/artem-benda/monitor/internal/signer"
+	"github.com/artem-benda/monitor/internal/version"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
 )
 
-var store storage.Storage
-var dbpool *pgxpool.Pool
+var (
+	store        storage.Storage
+	dbpool       *pgxpool.Pool
+	buildVersion string
+	buildDate    string
+	buildCommit  string
+)
 
 func main() {
+	version.PrintVersion(buildVersion, buildDate, buildCommit)
 	parseFlags()
 	var err error
 

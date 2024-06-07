@@ -8,10 +8,10 @@ import (
 
 type Config struct {
 	ServerEndpoint     string `env:"ADDRESS"`
-	ReportInterval     int    `env:"REPORT_INTERVAL"`
-	PollInterval       int    `env:"POLL_INTERVAL"`
 	LogLevel           string `env:"LOG_LEVEL"`
 	Key                string `env:"KEY"`
+	ReportInterval     int    `env:"REPORT_INTERVAL"`
+	PollInterval       int    `env:"POLL_INTERVAL"`
 	MaxParallelWorkers int    `env:"RATE_LIMIT"`
 }
 

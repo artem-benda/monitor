@@ -9,11 +9,11 @@ import (
 type Config struct {
 	Endpoint             string `env:"ADDRESS"`
 	LogLevel             string `env:"LOG_LEVEL"`
-	StoreIntervalSeconds int    `env:"STORE_INTERVAL"`
 	StoreFileName        string `env:"FILE_STORAGE_PATH"`
-	StoreRestoreFromFile bool   `env:"RESTORE"`
 	DatabaseDSN          string `env:"DATABASE_DSN"`
 	Key                  string `env:"KEY"`
+	StoreIntervalSeconds int    `env:"STORE_INTERVAL"`
+	StoreRestoreFromFile bool   `env:"RESTORE"`
 }
 
 var config Config

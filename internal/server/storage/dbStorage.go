@@ -172,7 +172,10 @@ func (s dbStorage) getAll(ctx context.Context) (map[model.MetricKey]model.Metric
 	)
 
 	for rows.Next() {
-		rows.Scan(&mtype, &mname, &gauge, &counter)
+		err = rows.Scan(&mtype, &mname, &gauge, &counter)
+		if err != nil {
+			return nil, err
+		}
 
 		switch {
 		case mtype == model.CounterKind && counter.Valid:
@@ -214,7 +217,12 @@ func (s dbStorage) upsertBatch(ctx context.Context, metrics []model.MetricKeyWit
 		return err
 	}
 
-	defer tx.Rollback(ctx)
+	defer func() {
+		err = tx.Rollback(ctx)
+		if err != nil {
+			logger.Log.Debug("Rollback tx error", zap.Error(err))
+		}
+	}()
 
 	_, err = tx.Prepare(
 		ctx,
@@ -231,7 +239,7 @@ func (s dbStorage) upsertBatch(ctx context.Context, metrics []model.MetricKeyWit
 
 	for _, m := range metrics {
 		logger.Log.Debug("Updating metric", zap.String("kind", m.Kind), zap.String("name", m.Name), zap.Int64("counter", m.Counter), zap.Float64("gauge", m.Gauge))
-		_, err := tx.Exec(ctx, "upsert-metrics", m.Kind, m.Name, m.Gauge, m.Counter)
+		_, err = tx.Exec(ctx, "upsert-metrics", m.Kind, m.Name, m.Gauge, m.Counter)
 
 		if err != nil {
 			logger.Log.Debug("Updating metric error", zap.Error(err))

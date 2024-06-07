@@ -1,13 +1,15 @@
 package handlers
 
 import (
-	"github.com/go-chi/chi/v5"
 	"io"
 	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/go-chi/chi/v5"
+
+	"github.com/artem-benda/monitor/internal/logger"
 	"github.com/artem-benda/monitor/internal/server/storage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -15,8 +17,8 @@ import (
 
 func TestMakeUpdatePathHandler(t *testing.T) {
 	type want struct {
-		code        int
 		contentType string
+		code        int
 	}
 	tests := []struct {
 		name        string
@@ -112,7 +114,12 @@ func TestMakeUpdatePathHandler(t *testing.T) {
 			// проверяем код ответа
 			assert.Equal(t, test.want.code, res.StatusCode)
 			// получаем и проверяем тело запроса
-			defer res.Body.Close()
+			defer func() {
+				err = res.Body.Close()
+				if err != nil {
+					logger.Log.Error("Could not close body reader")
+				}
+			}()
 			_, err = io.ReadAll(res.Body)
 
 			require.NoError(t, err)

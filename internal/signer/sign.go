@@ -15,9 +15,9 @@ import (
 const HashHeader = "HashSHA256"
 
 type signWriter struct {
+	buf *bytes.Buffer
 	w   http.ResponseWriter
 	key []byte
-	buf *bytes.Buffer
 }
 
 func newSignWriter(w http.ResponseWriter, signingKey []byte) *signWriter {
@@ -113,7 +113,12 @@ func CreateVerifyAndSignMiddleware(signingKey []byte) func(http.Handler) http.Ha
 				sw := newSignWriter(w, signingKey)
 				ow = sw
 				// Вычисляем подпись, устанавливаем заголовок и записываем тело запроса из буффера
-				defer sw.WriteSigAndBody()
+				defer func() {
+					err := sw.WriteSigAndBody()
+					if err != nil {
+						logger.Log.Error("Error writing sig and body", zap.Error(err))
+					}
+				}()
 			}
 
 			// передаём управление хендлеру

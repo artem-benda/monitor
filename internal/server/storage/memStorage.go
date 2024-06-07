@@ -8,8 +8,10 @@ import (
 	"time"
 
 	"github.com/artem-benda/monitor/internal/dto"
+	"github.com/artem-benda/monitor/internal/logger"
 	"github.com/artem-benda/monitor/internal/model"
 	"github.com/mailru/easyjson"
+	"go.uber.org/zap"
 )
 
 type memStorage struct {
@@ -64,7 +66,10 @@ func NewMemStorage(saveIntervalSec int, filename string, restore bool) (Storage,
 		go func() {
 			for range ticker.C {
 				s.rw.Lock()
-				s.saveToFile()
+				err := s.saveToFile()
+				if err != nil {
+					logger.Log.Error("Save to file error", zap.Error(err))
+				}
 				s.rw.Unlock()
 			}
 		}()

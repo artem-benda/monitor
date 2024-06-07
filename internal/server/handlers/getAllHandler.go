@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/artem-benda/monitor/internal/logger"
 	"github.com/artem-benda/monitor/internal/server/service"
 	"github.com/artem-benda/monitor/internal/server/storage"
+	"go.uber.org/zap"
 )
 
 // MakeGetAllHandler - создать обработчик метода получения списка всех актуальных значений метрик
@@ -19,9 +21,10 @@ func MakeGetAllHandler(store storage.Storage) http.HandlerFunc {
 			return
 		}
 		for metricKey, strVal := range metrics {
-			w.Write([]byte("<p>"))
-			w.Write([]byte(fmt.Sprintf("%s: %s", metricKey.Name, strVal)))
-			w.Write([]byte("</p>"))
+			_, err = w.Write([]byte(fmt.Sprintf("<p>%s: %s</p>", metricKey.Name, strVal)))
+			if err != nil {
+				logger.Log.Error("Could not write body", zap.Error(err))
+			}
 		}
 	}
 }

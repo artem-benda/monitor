@@ -4,10 +4,12 @@ import (
 	"net/http"
 
 	"github.com/artem-benda/monitor/internal/dto"
+	"github.com/artem-benda/monitor/internal/logger"
 	"github.com/artem-benda/monitor/internal/model"
 	"github.com/artem-benda/monitor/internal/server/service"
 	"github.com/artem-benda/monitor/internal/server/storage"
 	"github.com/mailru/easyjson"
+	"go.uber.org/zap"
 )
 
 // MakeGetJSONHandler - создать обработчик метода получения списка всех актуальных значений метрик в виде JSON
@@ -33,7 +35,10 @@ func MakeGetJSONHandler(store storage.Storage) http.HandlerFunc {
 				} else if ok {
 					w.WriteHeader(http.StatusOK)
 					metrics.Value = &floatVal
-					easyjson.MarshalToHTTPResponseWriter(metrics, w)
+					_, _, err = easyjson.MarshalToHTTPResponseWriter(metrics, w)
+					if err != nil {
+						logger.Log.Error("Error writing json body", zap.Error(err))
+					}
 				} else {
 					w.WriteHeader(http.StatusNotFound)
 				}
@@ -45,7 +50,10 @@ func MakeGetJSONHandler(store storage.Storage) http.HandlerFunc {
 				} else if ok {
 					w.WriteHeader(http.StatusOK)
 					metrics.Delta = &intVal
-					easyjson.MarshalToHTTPResponseWriter(metrics, w)
+					_, _, err = easyjson.MarshalToHTTPResponseWriter(metrics, w)
+					if err != nil {
+						logger.Log.Error("Could not write json body", zap.Error(err))
+					}
 				} else {
 					w.WriteHeader(http.StatusNotFound)
 				}

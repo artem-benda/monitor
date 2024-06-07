@@ -16,9 +16,9 @@ func TestUpdateMetric(t *testing.T) {
 		strVal string
 	}
 	tests := []struct {
+		want    map[model.MetricKey]model.MetricValue
 		name    string
 		metrics []metric
-		want    map[model.MetricKey]model.MetricValue
 		wantErr bool
 	}{
 		{

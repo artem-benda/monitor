@@ -3,12 +3,12 @@ package storage
 import "sync"
 
 type memCounter struct {
-	currentValue uint64
 	rw           *sync.RWMutex
+	currentValue uint64
 }
 
 func NewCounter() Counter {
-	return &memCounter{0, &sync.RWMutex{}}
+	return &memCounter{&sync.RWMutex{}, 0}
 }
 
 func (c *memCounter) IncrementAndGet() uint64 {
@@ -30,4 +30,4 @@ func (c *memCounter) Reset() {
 	c.currentValue = 0
 }
 
-var CounterStore Counter = &memCounter{0, &sync.RWMutex{}}
+var CounterStore Counter = &memCounter{&sync.RWMutex{}, 0}

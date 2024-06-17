@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"sync"
 	"time"
 
@@ -30,7 +31,12 @@ func main() {
 	if err := logger.Initialize(config.LogLevel); err != nil {
 		panic(err)
 	} else {
-		defer logger.Log.Sync()
+		defer func() {
+			err = logger.Log.Sync()
+			if err != nil {
+				panic(err)
+			}
+		}()
 	}
 
 	client := resty.New()
@@ -53,7 +59,7 @@ func main() {
 		go sendMetricsWorker(i, client, retryController, metricsCh)
 	}
 
-	http.ListenAndServe(addr, nil) // запускаем сервер pprof
+	log.Fatal(http.ListenAndServe(addr, nil)) // запускаем сервер pprof
 
 	// var wg sync.WaitGroup
 	// wg.Add(1)

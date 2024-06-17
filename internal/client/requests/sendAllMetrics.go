@@ -37,10 +37,12 @@ func SendAllMetrics(c *resty.Client, withRetry retry.RetryController, metrics ma
 
 	var b bytes.Buffer
 	w := gzip.NewWriter(&b)
-	if _, err := w.Write(json); err != nil {
+	if _, err = w.Write(json); err != nil {
 		return err
 	}
-	w.Close()
+	if err = w.Close(); err != nil {
+		return err
+	}
 
 	var resp *resty.Response
 

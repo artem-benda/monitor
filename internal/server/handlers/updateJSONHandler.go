@@ -4,10 +4,12 @@ import (
 	"net/http"
 
 	"github.com/artem-benda/monitor/internal/dto"
+	"github.com/artem-benda/monitor/internal/logger"
 	"github.com/artem-benda/monitor/internal/model"
 	"github.com/artem-benda/monitor/internal/server/service"
 	"github.com/artem-benda/monitor/internal/server/storage"
 	"github.com/mailru/easyjson"
+	"go.uber.org/zap"
 )
 
 // MakeUpdateJSONHandler - создать обработчик метода обновления значения указанной метрики из JSON
@@ -44,7 +46,10 @@ func MakeUpdateJSONHandler(store storage.Storage) http.HandlerFunc {
 				w.WriteHeader(http.StatusInternalServerError)
 			} else {
 				w.WriteHeader(http.StatusOK)
-				easyjson.MarshalToHTTPResponseWriter(metrics, w)
+				_, _, err = easyjson.MarshalToHTTPResponseWriter(metrics, w)
+				if err != nil {
+					logger.Log.Error("Could not write json body", zap.Error(err))
+				}
 			}
 		case metrics.MType == model.CounterKind:
 			var err error
@@ -53,7 +58,10 @@ func MakeUpdateJSONHandler(store storage.Storage) http.HandlerFunc {
 				w.WriteHeader(http.StatusInternalServerError)
 			} else {
 				w.WriteHeader(http.StatusOK)
-				easyjson.MarshalToHTTPResponseWriter(metrics, w)
+				_, _, err = easyjson.MarshalToHTTPResponseWriter(metrics, w)
+				if err != nil {
+					logger.Log.Error("Could not write json body", zap.Error(err))
+				}
 			}
 		default:
 			w.WriteHeader(http.StatusBadRequest)

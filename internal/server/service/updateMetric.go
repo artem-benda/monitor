@@ -18,9 +18,9 @@ func UpdateMetric(ctx context.Context, s storage.Storage, kind string, name stri
 	case model.CounterKind:
 		{
 			if value, err := strconv.ParseInt(strVal, 10, 64); err == nil {
-				_, err := UpdateAndGetCounterMetric(ctx, s, name, value)
-				if err != nil {
-					return err
+				_, err1 := UpdateAndGetCounterMetric(ctx, s, name, value)
+				if err1 != nil {
+					return err1
 				}
 			} else {
 				return err
@@ -29,9 +29,9 @@ func UpdateMetric(ctx context.Context, s storage.Storage, kind string, name stri
 	case model.GaugeKind:
 		{
 			if value, err := strconv.ParseFloat(strVal, 64); err == nil {
-				_, err := UpdateAndGetGaugeMetric(ctx, s, name, value)
-				if err != nil {
-					return err
+				_, err1 := UpdateAndGetGaugeMetric(ctx, s, name, value)
+				if err1 != nil {
+					return err1
 				}
 			} else {
 				return err

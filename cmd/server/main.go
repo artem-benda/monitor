@@ -16,6 +16,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"go.uber.org/zap"
 )
 
 var store storage.Storage
@@ -28,7 +29,12 @@ func main() {
 	if err = logger.Initialize(config.LogLevel); err != nil {
 		panic(err)
 	} else {
-		defer logger.Log.Sync()
+		defer func() {
+			err = logger.Log.Sync()
+			if err != nil {
+				logger.Log.Error("Could not sync log data", zap.Error(err))
+			}
+		}()
 	}
 
 	if config.DatabaseDSN != "" {

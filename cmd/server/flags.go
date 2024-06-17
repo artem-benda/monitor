@@ -12,6 +12,7 @@ type Config struct {
 	StoreFileName        string `env:"FILE_STORAGE_PATH"`
 	DatabaseDSN          string `env:"DATABASE_DSN"`
 	Key                  string `env:"KEY"`
+	RSAPrivKeyBase64     string `env:"CRYPTO_KEY"`
 	StoreIntervalSeconds int    `env:"STORE_INTERVAL"`
 	StoreRestoreFromFile bool   `env:"RESTORE"`
 }
@@ -26,6 +27,7 @@ func parseFlags() {
 	flag.BoolVar(&config.StoreRestoreFromFile, "r", true, "should restore metrics values from file on startup")
 	flag.StringVar(&config.DatabaseDSN, "d", "", "Database connection URL in pgx format, for ex. postgres://jack:secret@pg.example.com:5432/mydb?sslmode=verify-ca&pool_max_conns=10")
 	flag.StringVar(&config.Key, "k", "", "if set, signature in header for POST requests will be validated")
+	flag.StringVar(&config.RSAPrivKeyBase64, "crypto-key", "", "RSA base64 private key, used to decrypt agent's request body, if set")
 	flag.Parse()
 
 	if err := env.Parse(&config); err != nil {

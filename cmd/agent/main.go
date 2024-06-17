@@ -16,6 +16,7 @@ import (
 	"github.com/artem-benda/monitor/internal/logger"
 	"github.com/artem-benda/monitor/internal/model"
 	"github.com/artem-benda/monitor/internal/retry"
+	"github.com/artem-benda/monitor/internal/version"
 	"github.com/go-resty/resty/v2"
 	"go.uber.org/zap"
 )
@@ -25,7 +26,14 @@ const (
 	addr             = ":8089" // адрес сервера pprof
 )
 
+var (
+	buildVersion string
+	buildDate    string
+	buildCommit  string
+)
+
 func main() {
+	version.PrintVersion(buildVersion, buildDate, buildCommit)
 	parseFlags()
 
 	if err := logger.Initialize(config.LogLevel); err != nil {

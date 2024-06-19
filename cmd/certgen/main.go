@@ -10,7 +10,7 @@ import (
 // Утилита для генерации тестовой пары ключей
 func main() {
 	// Генерируем пару ключей
-	priv, pub, err := crypt.GenerateKeyPair(2048)
+	priv, pub, err := crypt.GenerateKeyPair(8192)
 	if err != nil {
 		panic(err)
 	}

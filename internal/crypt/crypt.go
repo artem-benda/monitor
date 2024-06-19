@@ -4,7 +4,6 @@ package crypt
 import (
 	"crypto/rand"
 	"crypto/rsa"
-	"crypto/sha512"
 	"crypto/x509"
 	"encoding/pem"
 
@@ -98,12 +97,10 @@ func BytesToPublicKey(pub []byte) (*rsa.PublicKey, error) {
 
 // EncryptWithPublicKey encrypts data with public key
 func EncryptWithPublicKey(msg []byte, pub *rsa.PublicKey) ([]byte, error) {
-	hash := sha512.New()
-	return rsa.EncryptOAEP(hash, rand.Reader, pub, msg, nil)
+	return rsa.EncryptPKCS1v15(rand.Reader, pub, msg)
 }
 
 // DecryptWithPrivateKey decrypts data with private key
 func DecryptWithPrivateKey(ciphertext []byte, priv *rsa.PrivateKey) ([]byte, error) {
-	hash := sha512.New()
-	return rsa.DecryptOAEP(hash, rand.Reader, priv, ciphertext, nil)
+	return rsa.DecryptPKCS1v15(rand.Reader, priv, ciphertext)
 }

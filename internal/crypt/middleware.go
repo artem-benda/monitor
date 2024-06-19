@@ -17,8 +17,8 @@ func NewDecryptMiddleware(privateKey *rsa.PrivateKey) func(h http.Handler) http.
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 			// проверяем, что клиент отправил серверу зашифрованные данные
-			contentEncoding := r.Header.Get("Content-Encoding")
-			sendsEncrypted := strings.Contains(contentEncoding, "encrypted")
+			contentEncryption := r.Header.Get("Content-Encryption")
+			sendsEncrypted := strings.Contains(contentEncryption, "encrypted")
 			if sendsEncrypted {
 				encBody, err := io.ReadAll(r.Body)
 				if err != nil {

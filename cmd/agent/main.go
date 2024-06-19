@@ -128,6 +128,7 @@ func fanIn(chs ...<-chan map[model.MetricKey]model.MetricValue) <-chan map[model
 }
 
 func sendMetricsWorker(id int, client *resty.Client, retryController retry.RetryController, in <-chan map[model.MetricKey]model.MetricValue) {
+	rsaPublicKey := mustParsePublicKey(config.RSAPubKeyBase64)
 	for {
 		metrics := make(map[model.MetricKey]model.MetricValue)
 	L:
@@ -144,7 +145,7 @@ func sendMetricsWorker(id int, client *resty.Client, retryController retry.Retry
 			}
 		}
 		logger.Log.Debug("sending metrics", zap.Int("workerId", id))
-		err := requests.SendAllMetrics(client, retryController, metrics, []byte(config.Key))
+		err := requests.SendAllMetrics(client, retryController, metrics, []byte(config.Key), rsaPublicKey)
 
 		if err != nil {
 			logger.Log.Debug("error sending metrics batch", zap.Int("workerId", id), zap.Error(err))

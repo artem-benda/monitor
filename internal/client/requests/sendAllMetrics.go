@@ -3,11 +3,13 @@ package requests
 import (
 	"bytes"
 	"compress/gzip"
+	"crypto/rsa"
 	"encoding/base64"
 	"fmt"
 	"net/http"
 
 	"github.com/artem-benda/monitor/internal/client/errors"
+	"github.com/artem-benda/monitor/internal/crypt"
 	"github.com/artem-benda/monitor/internal/dto"
 	"github.com/artem-benda/monitor/internal/logger"
 	"github.com/artem-benda/monitor/internal/model"
@@ -19,7 +21,7 @@ import (
 )
 
 // SendAllMetrics - Отправить значения метрик на сервер
-func SendAllMetrics(c *resty.Client, withRetry retry.RetryController, metrics map[model.MetricKey]model.MetricValue, signingKey []byte) error {
+func SendAllMetrics(c *resty.Client, withRetry retry.RetryController, metrics map[model.MetricKey]model.MetricValue, signingKey []byte, rsaPublicKey *rsa.PublicKey) error {
 	dtos := make(dto.MetricsBatch, 0)
 
 	for k, v := range metrics {
@@ -44,10 +46,21 @@ func SendAllMetrics(c *resty.Client, withRetry retry.RetryController, metrics ma
 		return err
 	}
 
+	var body []byte
+	if rsaPublicKey == nil {
+		body = b.Bytes()
+	} else {
+		bytes, err := crypt.EncryptWithPublicKey(b.Bytes(), rsaPublicKey)
+		if err != nil {
+			return err
+		}
+		body = bytes
+	}
+
 	var resp *resty.Response
 
 	err = withRetry.Run(func() (err error) {
-		resp, err = sendBytes(c, b.Bytes(), signingKey)
+		resp, err = sendBytes(c, body, signingKey)
 		return
 	})
 

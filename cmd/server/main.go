@@ -70,7 +70,7 @@ func newAppRouter() *chi.Mux {
 	r := chi.NewRouter()
 	r.Use(logger.LoggerMiddleware)
 	r.Use(signer.CreateVerifyAndSignMiddleware([]byte(config.Key)))
-	r.Use(crypt.NewDecryptMiddleware(mustUnmarshallRSAPrivateKey(config.RSAPrivKeyBase64)))
+	r.Use(crypt.NewDecryptMiddleware(mustParseRSAPrivateKey(config.RSAPrivKeyBase64)))
 	r.Use(gzipper.GzipMiddleware)
 
 	r.Mount("/debug", middleware.Profiler())

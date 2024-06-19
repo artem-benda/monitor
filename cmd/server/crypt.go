@@ -8,7 +8,7 @@ import (
 	"github.com/artem-benda/monitor/internal/crypt"
 )
 
-func mustUnmarshallRSAPrivateKey(base64PrivateKey string) *rsa.PrivateKey {
+func mustParseRSAPrivateKey(base64PrivateKey string) *rsa.PrivateKey {
 	if len(base64PrivateKey) == 0 {
 		return nil
 	}

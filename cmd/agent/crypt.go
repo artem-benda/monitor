@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"crypto/rsa"
 	"encoding/base64"
 
@@ -13,10 +12,7 @@ func mustParsePublicKey(base64PublicKey string) *rsa.PublicKey {
 		return nil
 	}
 
-	r := bytes.NewReader([]byte(base64PublicKey))
-
-	var rawKey []byte
-	_, err := base64.NewDecoder(base64.StdEncoding, r).Read(rawKey)
+	rawKey, err := base64.StdEncoding.DecodeString(base64PublicKey)
 	if err != nil {
 		panic(err)
 	}

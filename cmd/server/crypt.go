@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"crypto/rsa"
 	"encoding/base64"
 
@@ -13,10 +12,7 @@ func mustParseRSAPrivateKey(base64PrivateKey string) *rsa.PrivateKey {
 		return nil
 	}
 
-	r := bytes.NewReader([]byte(base64PrivateKey))
-
-	var rawKey []byte
-	_, err := base64.NewDecoder(base64.StdEncoding, r).Read(rawKey)
+	rawKey, err := base64.StdEncoding.DecodeString(base64PrivateKey)
 	if err != nil {
 		panic(err)
 	}

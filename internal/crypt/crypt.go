@@ -1,3 +1,4 @@
+// Пакет содержит методы для работы с шифрованием
 package crypt
 
 import (
@@ -12,12 +13,13 @@ import (
 )
 
 // GenerateKeyPair generates a new key pair
-func GenerateKeyPair(bits int) (*rsa.PrivateKey, *rsa.PublicKey) {
+func GenerateKeyPair(bits int) (*rsa.PrivateKey, *rsa.PublicKey, error) {
 	privkey, err := rsa.GenerateKey(rand.Reader, bits)
 	if err != nil {
 		logger.Log.Error("error generating key pair", zap.Error(err))
+		return nil, nil, err
 	}
-	return privkey, &privkey.PublicKey
+	return privkey, &privkey.PublicKey, nil
 }
 
 // PrivateKeyToBytes private key to bytes
@@ -33,10 +35,11 @@ func PrivateKeyToBytes(priv *rsa.PrivateKey) []byte {
 }
 
 // PublicKeyToBytes public key to bytes
-func PublicKeyToBytes(pub *rsa.PublicKey) []byte {
+func PublicKeyToBytes(pub *rsa.PublicKey) ([]byte, error) {
 	pubASN1, err := x509.MarshalPKIXPublicKey(pub)
 	if err != nil {
 		logger.Log.Error("error marshalling public key", zap.Error(err))
+		return nil, err
 	}
 
 	pubBytes := pem.EncodeToMemory(&pem.Block{
@@ -44,11 +47,11 @@ func PublicKeyToBytes(pub *rsa.PublicKey) []byte {
 		Bytes: pubASN1,
 	})
 
-	return pubBytes
+	return pubBytes, nil
 }
 
 // BytesToPrivateKey bytes to private key
-func BytesToPrivateKey(priv []byte) *rsa.PrivateKey {
+func BytesToPrivateKey(priv []byte) (*rsa.PrivateKey, error) {
 	block, _ := pem.Decode(priv)
 	enc := x509.IsEncryptedPEMBlock(block)
 	b := block.Bytes
@@ -57,17 +60,19 @@ func BytesToPrivateKey(priv []byte) *rsa.PrivateKey {
 		b, err = x509.DecryptPEMBlock(block, nil)
 		if err != nil {
 			logger.Log.Error("error decrypting PEM block", zap.Error(err))
+			return nil, err
 		}
 	}
 	key, err := x509.ParsePKCS1PrivateKey(b)
 	if err != nil {
 		logger.Log.Error("error parsing PKCS1 private key", zap.Error(err))
+		return nil, err
 	}
-	return key
+	return key, nil
 }
 
 // BytesToPublicKey bytes to public key
-func BytesToPublicKey(pub []byte) *rsa.PublicKey {
+func BytesToPublicKey(pub []byte) (*rsa.PublicKey, error) {
 	block, _ := pem.Decode(pub)
 	enc := x509.IsEncryptedPEMBlock(block)
 	b := block.Bytes
@@ -76,17 +81,19 @@ func BytesToPublicKey(pub []byte) *rsa.PublicKey {
 		b, err = x509.DecryptPEMBlock(block, nil)
 		if err != nil {
 			logger.Log.Error("error decrypting PEM block", zap.Error(err))
+			return nil, err
 		}
 	}
 	ifc, err := x509.ParsePKIXPublicKey(b)
 	if err != nil {
 		logger.Log.Error("error parsing PKIX public key", zap.Error(err))
+		return nil, err
 	}
 	key, ok := ifc.(*rsa.PublicKey)
 	if !ok {
 		logger.Log.Error("parsed public key is not rsa public key")
 	}
-	return key
+	return key, nil
 }
 
 // EncryptWithPublicKey encrypts data with public key

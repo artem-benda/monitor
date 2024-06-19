@@ -1,4 +1,4 @@
-// Пакет содержит методы для работы с шифрованием
+// Package crypt - Пакет содержит методы для работы с шифрованием
 package crypt
 
 import (
@@ -52,17 +52,7 @@ func PublicKeyToBytes(pub *rsa.PublicKey) ([]byte, error) {
 // BytesToPrivateKey bytes to private key
 func BytesToPrivateKey(priv []byte) (*rsa.PrivateKey, error) {
 	block, _ := pem.Decode(priv)
-	enc := x509.IsEncryptedPEMBlock(block)
-	b := block.Bytes
-	var err error
-	if enc {
-		b, err = x509.DecryptPEMBlock(block, nil)
-		if err != nil {
-			logger.Log.Error("error decrypting PEM block", zap.Error(err))
-			return nil, err
-		}
-	}
-	key, err := x509.ParsePKCS1PrivateKey(b)
+	key, err := x509.ParsePKCS1PrivateKey(block.Bytes)
 	if err != nil {
 		logger.Log.Error("error parsing PKCS1 private key", zap.Error(err))
 		return nil, err
@@ -73,17 +63,7 @@ func BytesToPrivateKey(priv []byte) (*rsa.PrivateKey, error) {
 // BytesToPublicKey bytes to public key
 func BytesToPublicKey(pub []byte) (*rsa.PublicKey, error) {
 	block, _ := pem.Decode(pub)
-	enc := x509.IsEncryptedPEMBlock(block)
-	b := block.Bytes
-	var err error
-	if enc {
-		b, err = x509.DecryptPEMBlock(block, nil)
-		if err != nil {
-			logger.Log.Error("error decrypting PEM block", zap.Error(err))
-			return nil, err
-		}
-	}
-	ifc, err := x509.ParsePKIXPublicKey(b)
+	ifc, err := x509.ParsePKIXPublicKey(block.Bytes)
 	if err != nil {
 		logger.Log.Error("error parsing PKIX public key", zap.Error(err))
 		return nil, err

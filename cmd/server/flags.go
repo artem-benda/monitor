@@ -25,8 +25,10 @@ func parseFlags() {
 	// Проверим наличие флага -c/-config
 	var configFilenameFlag string
 	flag.StringVar(&configFilenameFlag, "c", "", "path to configuration file in JSON format")
+	flag.Parse()
 	if configFilenameFlag == "" {
 		flag.StringVar(&configFilenameFlag, "config", "", "path to configuration file in JSON format")
+		flag.Parse()
 	}
 
 	// Если задан путь к конфигурационному файлу - парсим его

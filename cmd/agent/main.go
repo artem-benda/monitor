@@ -75,8 +75,8 @@ func main() {
 	for i := 0; i < config.MaxParallelWorkers; i++ {
 		wg.Add(1)
 		go func(id int) {
+			defer wg.Done()
 			sendMetricsWorker(id, client, retryController, metricsCh)
-			wg.Done()
 		}(i)
 	}
 
@@ -144,8 +144,8 @@ func fanIn(chs ...<-chan map[model.MetricKey]model.MetricValue) <-chan map[model
 	}
 
 	go func() {
+		defer close(out)
 		wg.Wait()
-		close(out)
 	}()
 
 	return out

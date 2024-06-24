@@ -50,6 +50,8 @@ func main() {
 		}()
 	}
 
+	var flushStorage func() error
+
 	if config.DatabaseDSN != "" {
 		dbpool = newConnectionPool(config.DatabaseDSN)
 		initDB(dbpool)
@@ -58,7 +60,7 @@ func main() {
 		retryController := retry.NewRetryController(errors.ErrStorageConnection{})
 		store = storage.NewDBStorage(dbpool, retryController)
 	} else {
-		store, err = storage.NewMemStorage(config.StoreIntervalSeconds, config.StoreFileName, config.StoreRestoreFromFile)
+		store, flushStorage, err = storage.NewMemStorage(config.StoreIntervalSeconds, config.StoreFileName, config.StoreRestoreFromFile)
 		if err != nil {
 			panic(err)
 		}
@@ -104,6 +106,11 @@ func main() {
 
 	// Ожидаем завершения
 	<-serverCtx.Done()
+	// Сбрасываем на диск данные из хранилища, только для memStorage
+	if flushStorage != nil {
+		err = flushStorage()
+		logger.Log.Error("error flushing storage on shutdown")
+	}
 }
 
 func newAppRouter() *chi.Mux {

@@ -50,6 +50,8 @@ func parseFlags() {
 	flag.StringVar(&config.Key, "k", "", "if set, header with signature will be added to requests")
 	flag.IntVar(&config.MaxParallelWorkers, "l", 2, "max parallel workers, to limit parallel metrics requests")
 	flag.StringVar(&config.RSAPubKeyBase64, "crypto-key", "", "RSA base64 public key, used to encrypt request body, if set")
+	flag.StringVar(&configFilenameFlag, "c", "", "path to configuration file in JSON format")
+	flag.StringVar(&configFilenameFlag, "config", "", "path to configuration file in JSON format")
 	flag.Parse()
 
 	if err := env.Parse(&config); err != nil {

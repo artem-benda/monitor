@@ -52,6 +52,8 @@ func parseFlags() {
 	flag.StringVar(&config.DatabaseDSN, "d", "", "Database connection URL in pgx format, for ex. postgres://jack:secret@pg.example.com:5432/mydb?sslmode=verify-ca&pool_max_conns=10")
 	flag.StringVar(&config.Key, "k", "", "if set, signature in header for POST requests will be validated")
 	flag.StringVar(&config.RSAPrivKeyBase64, "crypto-key", "", "RSA base64 private key, used to decrypt agent's request body, if set")
+	flag.StringVar(&configFilenameFlag, "c", "", "path to configuration file in JSON format")
+	flag.StringVar(&configFilenameFlag, "config", "", "path to configuration file in JSON format")
 	flag.Parse()
 
 	if err := env.Parse(&config); err != nil {

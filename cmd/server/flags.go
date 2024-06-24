@@ -24,11 +24,12 @@ var config Config
 func parseFlags() {
 	// Проверим наличие флага -c/-config
 	var configFilenameFlag string
-	flag.StringVar(&configFilenameFlag, "c", "", "path to configuration file in JSON format")
-	flag.Parse()
-	if configFilenameFlag == "" {
-		flag.StringVar(&configFilenameFlag, "config", "", "path to configuration file in JSON format")
-		flag.Parse()
+	cmdArgs := os.Args[1:]
+	for ind, arg := range cmdArgs {
+		// если текущий аргумент - ключ - проверим, что есть следующий аргумент и считаем его путем к конфигурационному файлу
+		if arg == "-c" || arg == "-config" && ind+1 < len(cmdArgs) {
+			configFilenameFlag = cmdArgs[ind+1]
+		}
 	}
 
 	// Если задан путь к конфигурационному файлу - парсим его

@@ -2,7 +2,12 @@ package main
 
 import (
 	"context"
+	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	_ "net/http/pprof" // подключаем пакет pprof
 
@@ -60,10 +65,45 @@ func main() {
 	}
 
 	r := newAppRouter()
-	err = http.ListenAndServe(config.Endpoint, r)
-	if err != nil {
-		panic(err)
+	// Настройки сервера
+	server := &http.Server{Addr: config.Endpoint, Handler: r}
+
+	// Контекст сервера
+	serverCtx, serverStopCtx := context.WithCancel(context.Background())
+
+	// Слушаем нужные сигналы от ОС
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT)
+	go func() {
+		<-sig
+
+		// Даем максимум 30 секунд на выполнение останова
+		shutdownCtx, shutdownCancel := context.WithTimeout(serverCtx, 30*time.Second)
+
+		go func() {
+			defer shutdownCancel()
+			<-shutdownCtx.Done()
+			if shutdownCtx.Err() == context.DeadlineExceeded {
+				log.Fatal("graceful shutdown timed out.. forcing exit.")
+			}
+		}()
+
+		// Выполняем graceful shutdown
+		err := server.Shutdown(shutdownCtx)
+		if err != nil {
+			log.Fatal(err)
+		}
+		serverStopCtx()
+	}()
+
+	// Запускаем сервер
+	err = server.ListenAndServe()
+	if err != nil && err != http.ErrServerClosed {
+		log.Fatal(err)
 	}
+
+	// Ожидаем завершения
+	<-serverCtx.Done()
 }
 
 func newAppRouter() *chi.Mux {

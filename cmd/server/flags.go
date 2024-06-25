@@ -1,25 +1,48 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
+	"os"
 
 	"github.com/caarlos0/env/v10"
 )
 
 type Config struct {
-	Endpoint             string `env:"ADDRESS"`
+	Endpoint             string `env:"ADDRESS" json:"address"`
 	LogLevel             string `env:"LOG_LEVEL"`
-	StoreFileName        string `env:"FILE_STORAGE_PATH"`
-	DatabaseDSN          string `env:"DATABASE_DSN"`
+	StoreFileName        string `env:"FILE_STORAGE_PATH" json:"store_file"`
+	DatabaseDSN          string `env:"DATABASE_DSN" json:"database_dsn"`
 	Key                  string `env:"KEY"`
-	RSAPrivKeyBase64     string `env:"CRYPTO_KEY"`
-	StoreIntervalSeconds int    `env:"STORE_INTERVAL"`
-	StoreRestoreFromFile bool   `env:"RESTORE"`
+	RSAPrivKeyBase64     string `env:"CRYPTO_KEY" json:"crypto_key"`
+	StoreIntervalSeconds int    `env:"STORE_INTERVAL" json:"store_interval"`
+	StoreRestoreFromFile bool   `env:"RESTORE" json:"restore"`
 }
 
 var config Config
 
 func parseFlags() {
+	// Проверим наличие флага -c/-config
+	var configFilenameFlag string
+	flag.StringVar(&configFilenameFlag, "c", "", "path to configuration file in JSON format")
+	flag.Parse()
+	if configFilenameFlag == "" {
+		flag.StringVar(&configFilenameFlag, "config", "", "path to configuration file in JSON format")
+		flag.Parse()
+	}
+
+	// Если задан путь к конфигурационному файлу - парсим его
+	if configFilenameFlag != "" {
+		fileBytes, err := os.ReadFile(configFilenameFlag)
+		if err != nil {
+			panic(err)
+		}
+		err = json.Unmarshal(fileBytes, &config)
+		if err != nil {
+			panic(err)
+		}
+	}
+
 	flag.StringVar(&config.Endpoint, "a", "localhost:8080", "address and port of metrics server")
 	flag.StringVar(&config.LogLevel, "l", "debug", "logging level: debug, info, warn, error, dpanic, panic, fatal")
 	flag.IntVar(&config.StoreIntervalSeconds, "i", 300, "Period in seconds to save current metrics into file")

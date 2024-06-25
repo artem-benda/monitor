@@ -101,7 +101,7 @@ func TestMakeUpdatePathHandler(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			// Для каждого теста нужно новое хранилище, чтобы результаты не зависили от порядка выполнения
-			store, err := storage.NewMemStorage(10000, "test.txt", false)
+			store, _, err := storage.NewMemStorage(10000, "test.txt", false)
 			assert.NoError(t, err, "Error creating store for test")
 			handler := MakeUpdatePathHandler(store)
 
@@ -129,7 +129,7 @@ func TestMakeUpdatePathHandler(t *testing.T) {
 }
 
 func ExampleMakeUpdatePathHandler() {
-	memStorage, err := storage.NewMemStorage(100, "", false)
+	memStorage, _, err := storage.NewMemStorage(100, "", false)
 	if err != nil {
 		panic(err)
 	}

@@ -1,9 +1,12 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
+	"os/signal"
 	"sync"
+	"syscall"
 	"time"
 
 	"net/http"
@@ -58,45 +61,66 @@ func main() {
 
 	retryController := retry.NewRetryController(errors.ErrNetwork{}, errors.ErrServerTemporary{})
 
-	stdMetricsCh := genStdMetrics()
-	psUtilsMetricsCh := genPSUtilsMetrics()
+	// Слушаем нужные сигналы от ОС
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT)
+	defer stop()
+
+	stdMetricsCh := genStdMetrics(ctx.Done())
+	psUtilsMetricsCh := genPSUtilsMetrics(ctx.Done())
 
 	metricsCh := fanIn(stdMetricsCh, psUtilsMetricsCh)
 
+	var wg sync.WaitGroup
+
 	for i := 0; i < config.MaxParallelWorkers; i++ {
-		go sendMetricsWorker(i, client, retryController, metricsCh)
+		wg.Add(1)
+		go func(id int) {
+			defer wg.Done()
+			sendMetricsWorker(id, client, retryController, metricsCh)
+		}(i)
 	}
 
-	log.Fatal(http.ListenAndServe(addr, nil)) // запускаем сервер pprof
+	go func() {
+		log.Fatal(http.ListenAndServe(addr, nil)) // запускаем сервер pprof
+	}()
 
-	// var wg sync.WaitGroup
-	// wg.Add(1)
-	// Wait forever
-	// wg.Wait()
+	wg.Wait()
 }
 
-func genStdMetrics() <-chan map[model.MetricKey]model.MetricValue {
+func genStdMetrics(doneCh <-chan struct{}) <-chan map[model.MetricKey]model.MetricValue {
 	out := make(chan map[model.MetricKey]model.MetricValue)
 
 	go func() {
+		defer close(out)
 		for {
-			out <- service.ReadMetrics(storage.CounterStore)
-			logger.Log.Debug("added std metrics")
-			time.Sleep(time.Duration(config.PollInterval) * time.Second)
+			select {
+			case <-doneCh:
+				return
+			default:
+				out <- service.ReadMetrics(storage.CounterStore)
+				logger.Log.Debug("added std metrics")
+				time.Sleep(time.Duration(config.PollInterval) * time.Second)
+			}
 		}
 	}()
 
 	return out
 }
 
-func genPSUtilsMetrics() <-chan map[model.MetricKey]model.MetricValue {
+func genPSUtilsMetrics(doneCh <-chan struct{}) <-chan map[model.MetricKey]model.MetricValue {
 	out := make(chan map[model.MetricKey]model.MetricValue)
 
 	go func() {
+		defer close(out)
 		for {
-			out <- service.ReadPSUtilsMetrics()
-			logger.Log.Debug("added PSUtils metrics")
-			time.Sleep(time.Duration(config.PollInterval) * time.Second)
+			select {
+			case <-doneCh:
+				return
+			default:
+				out <- service.ReadPSUtilsMetrics()
+				logger.Log.Debug("added PSUtils metrics")
+				time.Sleep(time.Duration(config.PollInterval) * time.Second)
+			}
 		}
 	}()
 
@@ -120,8 +144,8 @@ func fanIn(chs ...<-chan map[model.MetricKey]model.MetricValue) <-chan map[model
 	}
 
 	go func() {
+		defer close(out)
 		wg.Wait()
-		close(out)
 	}()
 
 	return out
@@ -129,15 +153,22 @@ func fanIn(chs ...<-chan map[model.MetricKey]model.MetricValue) <-chan map[model
 
 func sendMetricsWorker(id int, client *resty.Client, retryController retry.RetryController, in <-chan map[model.MetricKey]model.MetricValue) {
 	rsaPublicKey := mustParsePublicKey(config.RSAPubKeyBase64)
+	isShutdown := false
 	for {
 		metrics := make(map[model.MetricKey]model.MetricValue)
 	L:
 		for {
 			select {
 			// Выбираем все накопившиеся метрики и мерджим их
-			case m := <-in:
-				for k, v := range m {
-					metrics[k] = v
+			case m, ok := <-in:
+				if ok {
+					for k, v := range m {
+						metrics[k] = v
+					}
+				} else {
+					// Канал закрыт, отправляем что есть
+					isShutdown = true
+					break L
 				}
 			// Больше нечего читать, отправляем что выбрали
 			default:
@@ -149,6 +180,11 @@ func sendMetricsWorker(id int, client *resty.Client, retryController retry.Retry
 
 		if err != nil {
 			logger.Log.Debug("error sending metrics batch", zap.Int("workerId", id), zap.Error(err))
+		}
+
+		if isShutdown {
+			logger.Log.Debug("gracefully finishing worker", zap.Int("workerId", id))
+			return
 		}
 
 		storage.CounterStore.Reset()

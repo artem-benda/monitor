@@ -24,11 +24,12 @@ var config Config
 func parseFlags() {
 	// Проверим наличие флага -c/-config
 	var configFilenameFlag string
-	flag.StringVar(&configFilenameFlag, "c", "", "path to configuration file in JSON format")
-	flag.Parse()
-	if configFilenameFlag == "" {
-		flag.StringVar(&configFilenameFlag, "config", "", "path to configuration file in JSON format")
-		flag.Parse()
+	cmdArgs := os.Args[1:]
+	for ind, arg := range cmdArgs {
+		// если текущий аргумент - ключ - проверим, что есть следующий аргумент и считаем его путем к конфигурационному файлу
+		if arg == "-c" || arg == "-config" && ind+1 < len(cmdArgs) {
+			configFilenameFlag = cmdArgs[ind+1]
+		}
 	}
 
 	// Если задан путь к конфигурационному файлу - парсим его
@@ -51,6 +52,8 @@ func parseFlags() {
 	flag.StringVar(&config.DatabaseDSN, "d", "", "Database connection URL in pgx format, for ex. postgres://jack:secret@pg.example.com:5432/mydb?sslmode=verify-ca&pool_max_conns=10")
 	flag.StringVar(&config.Key, "k", "", "if set, signature in header for POST requests will be validated")
 	flag.StringVar(&config.RSAPrivKeyBase64, "crypto-key", "", "RSA base64 private key, used to decrypt agent's request body, if set")
+	flag.StringVar(&configFilenameFlag, "c", "", "path to configuration file in JSON format")
+	flag.StringVar(&configFilenameFlag, "config", "", "path to configuration file in JSON format")
 	flag.Parse()
 
 	if err := env.Parse(&config); err != nil {

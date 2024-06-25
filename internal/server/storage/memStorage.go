@@ -23,7 +23,7 @@ type memStorage struct {
 
 // NewMemStorage - создать новое хранилище в памяти с поддержкой сохранения и восстановления
 // состояния в/из файла json
-func NewMemStorage(saveIntervalSec int, filename string, restore bool) (Storage, error) {
+func NewMemStorage(saveIntervalSec int, filename string, restore bool) (Storage, func() error, error) {
 	var metrics = make(map[model.MetricKey]model.MetricValue)
 	var savedMetrics dto.MetricsBatch
 
@@ -34,10 +34,10 @@ func NewMemStorage(saveIntervalSec int, filename string, restore bool) (Storage,
 				err   error
 			)
 			if bytes, err = os.ReadFile(filename); err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 			if err = easyjson.Unmarshal(bytes, &savedMetrics); err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 			for _, m := range savedMetrics {
 				switch m.MType {
@@ -74,7 +74,7 @@ func NewMemStorage(saveIntervalSec int, filename string, restore bool) (Storage,
 			}
 		}()
 	}
-	return &s, nil
+	return &s, s.saveToFile, nil
 }
 
 func (m memStorage) Get(ctx context.Context, key model.MetricKey) (*model.MetricValue, bool, error) {

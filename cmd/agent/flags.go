@@ -10,6 +10,7 @@ type Config struct {
 	ServerEndpoint     string `env:"ADDRESS"`
 	LogLevel           string `env:"LOG_LEVEL"`
 	Key                string `env:"KEY"`
+	RSAPubKeyBase64    string `env:"CRYPTO_KEY"`
 	ReportInterval     int    `env:"REPORT_INTERVAL"`
 	PollInterval       int    `env:"POLL_INTERVAL"`
 	MaxParallelWorkers int    `env:"RATE_LIMIT"`
@@ -24,6 +25,7 @@ func parseFlags() {
 	flag.StringVar(&config.LogLevel, "v", "debug", "logging level: debug, info, warn, error, dpanic, panic, fatal")
 	flag.StringVar(&config.Key, "k", "", "if set, header with signature will be added to requests")
 	flag.IntVar(&config.MaxParallelWorkers, "l", 2, "max parallel workers, to limit parallel metrics requests")
+	flag.StringVar(&config.RSAPubKeyBase64, "crypto-key", "", "RSA base64 public key, used to encrypt request body, if set")
 	flag.Parse()
 
 	if err := env.Parse(&config); err != nil {

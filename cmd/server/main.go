@@ -6,6 +6,7 @@ import (
 
 	_ "net/http/pprof" // подключаем пакет pprof
 
+	"github.com/artem-benda/monitor/internal/crypt"
 	"github.com/artem-benda/monitor/internal/gzipper"
 	"github.com/artem-benda/monitor/internal/logger"
 	"github.com/artem-benda/monitor/internal/retry"
@@ -69,6 +70,7 @@ func newAppRouter() *chi.Mux {
 	r := chi.NewRouter()
 	r.Use(logger.LoggerMiddleware)
 	r.Use(signer.CreateVerifyAndSignMiddleware([]byte(config.Key)))
+	r.Use(crypt.NewDecryptMiddleware(mustParseRSAPrivateKey(config.RSAPrivKeyBase64)))
 	r.Use(gzipper.GzipMiddleware)
 
 	r.Mount("/debug", middleware.Profiler())

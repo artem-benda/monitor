@@ -30,7 +30,7 @@ func TestSendAllMetrics(t *testing.T) {
 
 	r := retry.NewRetryController()
 
-	err := SendAllMetrics(resty, r, metrics, []byte{})
+	err := SendAllMetrics(resty, r, metrics, []byte{}, nil)
 	// Вызов только один, отправили пачкой
 	assert.Equal(t, 1, count)
 	assert.NoError(t, err)

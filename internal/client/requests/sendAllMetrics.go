@@ -3,11 +3,13 @@ package requests
 import (
 	"bytes"
 	"compress/gzip"
+	"crypto/rsa"
 	"encoding/base64"
 	"fmt"
 	"net/http"
 
 	"github.com/artem-benda/monitor/internal/client/errors"
+	"github.com/artem-benda/monitor/internal/crypt"
 	"github.com/artem-benda/monitor/internal/dto"
 	"github.com/artem-benda/monitor/internal/logger"
 	"github.com/artem-benda/monitor/internal/model"
@@ -19,7 +21,7 @@ import (
 )
 
 // SendAllMetrics - Отправить значения метрик на сервер
-func SendAllMetrics(c *resty.Client, withRetry retry.RetryController, metrics map[model.MetricKey]model.MetricValue, signingKey []byte) error {
+func SendAllMetrics(c *resty.Client, withRetry retry.RetryController, metrics map[model.MetricKey]model.MetricValue, signingKey []byte, rsaPublicKey *rsa.PublicKey) error {
 	dtos := make(dto.MetricsBatch, 0)
 
 	for k, v := range metrics {
@@ -44,10 +46,24 @@ func SendAllMetrics(c *resty.Client, withRetry retry.RetryController, metrics ma
 		return err
 	}
 
+	var body []byte
+	var isEncryptionEnabled bool
+	if rsaPublicKey == nil {
+		body = b.Bytes()
+	} else {
+		bytes, err := crypt.EncryptWithPublicKey(b.Bytes(), rsaPublicKey)
+		if err != nil {
+			logger.Log.Error("Unable to encrypt body", zap.Int("body_bytes", len(b.Bytes())), zap.Error(err))
+			return err
+		}
+		body = bytes
+		isEncryptionEnabled = true
+	}
+
 	var resp *resty.Response
 
 	err = withRetry.Run(func() (err error) {
-		resp, err = sendBytes(c, b.Bytes(), signingKey)
+		resp, err = sendBytes(c, body, signingKey, isEncryptionEnabled)
 		return
 	})
 
@@ -62,7 +78,7 @@ func SendAllMetrics(c *resty.Client, withRetry retry.RetryController, metrics ma
 
 }
 
-func sendBytes(resty *resty.Client, b []byte, signingKey []byte) (*resty.Response, error) {
+func sendBytes(resty *resty.Client, b []byte, signingKey []byte, isEncrypted bool) (*resty.Response, error) {
 	var signatureBase64 string
 	if len(signingKey) > 0 {
 		signature, err := signer.Sign(b, signingKey)
@@ -81,6 +97,10 @@ func sendBytes(resty *resty.Client, b []byte, signingKey []byte) (*resty.Respons
 	if signatureBase64 != "" {
 		request = request.
 			SetHeader("HashSHA256", signatureBase64)
+	}
+	if isEncrypted {
+		request = request.
+			SetHeader("Content-Encryption", "encrypted")
 	}
 
 	resp, err := request.

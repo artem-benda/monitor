@@ -17,6 +17,7 @@ type Config struct {
 	RSAPrivKeyBase64     string `env:"CRYPTO_KEY" json:"crypto_key"`
 	StoreIntervalSeconds int    `env:"STORE_INTERVAL" json:"store_interval"`
 	StoreRestoreFromFile bool   `env:"RESTORE" json:"restore"`
+	TrustedSubnet        string `env:"TRUSTED_SUBNET" json:"trusted_subnet"`
 }
 
 var config Config
@@ -54,6 +55,7 @@ func parseFlags() {
 	flag.StringVar(&config.RSAPrivKeyBase64, "crypto-key", "", "RSA base64 private key, used to decrypt agent's request body, if set")
 	flag.StringVar(&configFilenameFlag, "c", "", "path to configuration file in JSON format")
 	flag.StringVar(&configFilenameFlag, "config", "", "path to configuration file in JSON format")
+	flag.StringVar(&config.TrustedSubnet, "t", "", "trusted subnet in string representation of CIDR, for example '0000:0000:0000:0000:0000:0000:0000:0000/64' or '127:0:0:1/32'")
 	flag.Parse()
 
 	if err := env.Parse(&config); err != nil {

@@ -58,6 +58,7 @@ func LoggerMiddleware(next http.Handler) http.Handler {
 			zap.Duration("duration", duration),
 			zap.Int("statusCode", responseData.statusCode),
 			zap.Int64("responseSizeBytes", responseData.sizeBytes),
+			zap.String("x-real-ip", r.Header.Get("X-Real-IP")),
 		)
 	})
 }

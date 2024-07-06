@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+package mon;
+
+option go_package = "internal/grpc/mon";
+
+import "google/protobuf/empty.proto";
+
+message MetricKey {
+    string Id = 1;
+    MetricType type = 2;
+
+    enum MetricType {
+        GAUGE = 0;
+        COUNTER = 1;
+    }
+}
+
+message MetricValue {
+    MetricKey metricKey = 1;
+    oneof value {
+        double gauge = 2;
+        int64 counter = 3;
+    }
+}
+
+message GetMetricRequest {
+    MetricKey key = 1;
+}
+
+message GetMetricResponse {
+    MetricValue metric = 1;
+}
+
+message UpdateMetricRequest {
+    MetricValue metric = 1;
+}
+
+message UpdateMetricResponse {
+    MetricValue metric = 1;
+}
+
+message UpdateMetricsBatchRequest {
+    repeated MetricValue metric = 1;
+}
+
+service MonitorService {
+    rpc GetMetric(GetMetricRequest) returns (GetMetricResponse);
+    rpc UpdateMetric(UpdateMetricRequest) returns (UpdateMetricResponse);
+    rpc UpdateMetricsBatch(UpdateMetricsBatchRequest) returns (google.protobuf.Empty);
+    rpc PingDB(google.protobuf.Empty) returns (google.protobuf.Empty);
+}

@@ -17,7 +17,7 @@ message MetricKey {
 }
 
 message MetricValue {
-    MetricKey metricKey = 1;
+    string metricId = 1;
     oneof value {
         double gauge = 2;
         int64 counter = 3;

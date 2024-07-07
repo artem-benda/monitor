@@ -41,7 +41,7 @@ message UpdateMetricResponse {
 }
 
 message UpdateMetricsBatchRequest {
-    repeated MetricValue metric = 1;
+    repeated MetricValue metrics = 1;
 }
 
 service MonitorService {

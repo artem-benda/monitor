@@ -2,7 +2,6 @@ package grpc
 
 import (
 	"context"
-	"net/http"
 
 	pb "github.com/artem-benda/monitor/internal/grpc/mon"
 	"github.com/artem-benda/monitor/internal/logger"
@@ -10,7 +9,6 @@ import (
 	"github.com/artem-benda/monitor/internal/server/service"
 	"github.com/artem-benda/monitor/internal/server/storage"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/mailru/easyjson"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -51,45 +49,63 @@ func (s *MetricsGrpsServer) GetMetric(c context.Context, req *pb.GetMetricReques
 }
 
 func (s *MetricsGrpsServer) UpdateMetric(c context.Context, req *pb.UpdateMetricRequest) (*pb.UpdateMetricResponse, error) {
-	switch {
-	case req.Metric.MetricKey.Id == "":
+	if req.Metric.MetricId == "" {
 		return nil, status.Error(codes.NotFound, "")
-	case req.Metric.MetricKey.Type == pb.MetricKey_GAUGE && (req.Metric.Value == nil):
-		return nil, status.Error(codes.InvalidArgument, "")
-	case metrics.MType == model.CounterKind && metrics.Delta == nil:
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	case metrics.MType == model.GaugeKind:
-		var err error
-		*metrics.Value, err = service.UpdateAndGetGaugeMetric(r.Context(), store, metrics.ID, *metrics.Value)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-		} else {
-			w.WriteHeader(http.StatusOK)
-			_, _, err = easyjson.MarshalToHTTPResponseWriter(metrics, w)
-			if err != nil {
-				logger.Log.Error("Could not write json body", zap.Error(err))
-			}
-		}
-	case metrics.MType == model.CounterKind:
-		var err error
-		*metrics.Delta, err = service.UpdateAndGetCounterMetric(r.Context(), store, metrics.ID, *metrics.Delta)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-		} else {
-			w.WriteHeader(http.StatusOK)
-			_, _, err = easyjson.MarshalToHTTPResponseWriter(metrics, w)
-			if err != nil {
-				logger.Log.Error("Could not write json body", zap.Error(err))
-			}
-		}
-	default:
-		return nil, status.Error(codes.InvalidArgument, "")
 	}
+
+	switch req.Metric.Value.(type) {
+	case *pb.MetricValue_Gauge:
+		newGaugeVal, err := service.UpdateAndGetGaugeMetric(c, s.storage, req.Metric.MetricId, req.Metric.GetGauge())
+		if err != nil {
+			return nil, status.Error(codes.Internal, "")
+		}
+		return &pb.UpdateMetricResponse{Metric: &pb.MetricValue{MetricId: req.Metric.MetricId, Value: &pb.MetricValue_Gauge{Gauge: newGaugeVal}}}, nil
+	case *pb.MetricValue_Counter:
+		newCounterVal, err := service.UpdateAndGetCounterMetric(c, s.storage, req.Metric.MetricId, req.Metric.GetCounter())
+		if err != nil {
+			return nil, status.Error(codes.Internal, "")
+		}
+		return &pb.UpdateMetricResponse{Metric: &pb.MetricValue{MetricId: req.Metric.MetricId, Value: &pb.MetricValue_Counter{Counter: newCounterVal}}}, nil
+	}
+
+	return nil, status.Error(codes.Internal, "")
 }
 
-func (s *MetricsGrpsServer) UpdateMetricsBatch(context.Context, *pb.UpdateMetricsBatchRequest) (*emptypb.Empty, error) {
+func (s *MetricsGrpsServer) UpdateMetricsBatch(c context.Context, req *pb.UpdateMetricsBatchRequest) (*emptypb.Empty, error) {
+	logger.Log.Debug("MakeUpdateBatchJSONHandler, got metrics", zap.Int("count", len(req.Metrics)))
 
+	if len(req.Metrics) == 0 {
+		return &emptypb.Empty{}, nil
+	}
+
+	models := make([]model.MetricKeyWithValue, len(req.Metrics))
+
+	for _, m := range req.Metrics {
+		logger.Log.Debug("Adding metric...", zap.String("ID", m.MetricId))
+
+		if m.MetricId == "" {
+			return nil, status.Error(codes.NotFound, "")
+		}
+
+		switch m.Value.(type) {
+		case *pb.MetricValue_Gauge:
+			models = append(models, model.MetricKeyWithValue{Kind: model.GaugeKind, Name: m.MetricId, Gauge: m.GetGauge()})
+			continue
+		case *pb.MetricValue_Counter:
+			models = append(models, model.MetricKeyWithValue{Kind: model.CounterKind, Name: m.MetricId, Counter: m.GetCounter()})
+			continue
+		}
+
+		return nil, status.Error(codes.Internal, "")
+	}
+
+	err := service.UpdateMetrics(c, s.storage, models)
+
+	if err != nil {
+		return nil, status.Error(codes.Internal, "")
+	}
+
+	return &emptypb.Empty{}, nil
 }
 
 func (s *MetricsGrpsServer) PingDB(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
@@ -105,16 +121,5 @@ func (s *MetricsGrpsServer) PingDB(context.Context, *emptypb.Empty) (*emptypb.Em
 	} else {
 		logger.Log.Debug("Executed ping command with error", zap.Error(err))
 		return nil, status.Error(codes.Internal, "error executing db ping")
-	}
-}
-
-func mapToMetricType(t pb.MetricKey_MetricType) string {
-	switch t {
-	case pb.MetricKey_COUNTER:
-		return model.CounterKind
-	case pb.MetricKey_GAUGE:
-		return model.GaugeKind
-	default:
-		return ""
 	}
 }

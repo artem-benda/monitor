@@ -16,6 +16,7 @@ type Config struct {
 	ReportInterval     int    `env:"REPORT_INTERVAL" json:"report_interval"`
 	PollInterval       int    `env:"POLL_INTERVAL" json:"poll_interval"`
 	MaxParallelWorkers int    `env:"RATE_LIMIT"`
+	UseGRPC            bool   `env:"USE_GRPC" json:"use_grpc"`
 }
 
 var config Config
@@ -52,6 +53,7 @@ func parseFlags() {
 	flag.StringVar(&config.RSAPubKeyBase64, "crypto-key", "", "RSA base64 public key, used to encrypt request body, if set")
 	flag.StringVar(&configFilenameFlag, "c", "", "path to configuration file in JSON format")
 	flag.StringVar(&configFilenameFlag, "config", "", "path to configuration file in JSON format")
+	flag.BoolVar(&config.UseGRPC, "g", true, "should use GRPC instead of REST")
 	flag.Parse()
 
 	if err := env.Parse(&config); err != nil {

@@ -77,7 +77,7 @@ func main() {
 		wg.Add(1)
 		go func(id int) {
 			defer wg.Done()
-			sendMetricsWorker(id, client, retryController, metricsCh)
+			sendMetricsRESTWorker(id, client, retryController, metricsCh)
 		}(i)
 	}
 
@@ -152,7 +152,7 @@ func fanIn(chs ...<-chan map[model.MetricKey]model.MetricValue) <-chan map[model
 	return out
 }
 
-func sendMetricsWorker(id int, client *resty.Client, retryController retry.RetryController, in <-chan map[model.MetricKey]model.MetricValue) {
+func sendMetricsRESTWorker(id int, client *resty.Client, retryController retry.RetryController, in <-chan map[model.MetricKey]model.MetricValue) {
 	rsaPublicKey := mustParsePublicKey(config.RSAPubKeyBase64)
 	isShutdown := false
 	for {

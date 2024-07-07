@@ -57,7 +57,7 @@ func parseFlags() {
 	flag.StringVar(&configFilenameFlag, "c", "", "path to configuration file in JSON format")
 	flag.StringVar(&configFilenameFlag, "config", "", "path to configuration file in JSON format")
 	flag.StringVar(&config.TrustedSubnet, "t", "", "trusted subnet in string representation of CIDR, for example '0000:0000:0000:0000:0000:0000:0000:0000/64' or '127:0:0:1/32'")
-	flag.BoolVar(&config.UseGRPC, "g", true, "should use GRPC server instead of REST server")
+	flag.BoolVar(&config.UseGRPC, "g", false, "should use GRPC server instead of REST server")
 	flag.Parse()
 
 	if err := env.Parse(&config); err != nil {

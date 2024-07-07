@@ -55,7 +55,7 @@ func main() {
 	}
 
 	if config.UseGRPC {
-		mustRunGrpcServer(flushStorage)
+		mustRunGrpcServer(store, dbpool, flushStorage)
 	} else {
 		mustRunRestServer(flushStorage)
 	}

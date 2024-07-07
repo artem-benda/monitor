@@ -19,4 +19,5 @@ func mustCreateRestyClient() *resty.Client {
 	client.SetTimeout(30 * time.Second)
 	client.OnAfterResponse(logger.NewRestyResponseLogger())
 	client.Header.Add("X-Real-IP", mustGetLocalIPAddr(config.ServerEndpoint).String())
+	return client
 }

@@ -17,14 +17,14 @@ import (
 
 type MetricsGrpsServer struct {
 	pb.UnimplementedMonitorServiceServer
-	storage storage.Storage
-	dbpool  *pgxpool.Pool
+	Storage storage.Storage
+	DBPool  *pgxpool.Pool
 }
 
 func (s *MetricsGrpsServer) GetMetric(c context.Context, req *pb.GetMetricRequest) (*pb.GetMetricResponse, error) {
 	switch {
 	case req.Key.Id != "" && req.Key.Type == pb.MetricKey_COUNTER:
-		cnt, ok, err := service.GetCounterMetric(c, s.storage, req.Key.Id)
+		cnt, ok, err := service.GetCounterMetric(c, s.Storage, req.Key.Id)
 		if err != nil {
 			return nil, status.Error(codes.Internal, "")
 		}
@@ -33,7 +33,7 @@ func (s *MetricsGrpsServer) GetMetric(c context.Context, req *pb.GetMetricReques
 		}
 		return &pb.GetMetricResponse{Metric: &pb.MetricValue{MetricId: req.Key.Id, Value: &pb.MetricValue_Counter{Counter: cnt}}}, nil
 	case req.Key.Id != "" && req.Key.Type == pb.MetricKey_GAUGE:
-		val, ok, err := service.GetGaugeMetric(c, s.storage, req.Key.Id)
+		val, ok, err := service.GetGaugeMetric(c, s.Storage, req.Key.Id)
 		if err != nil {
 			return nil, status.Error(codes.Internal, "")
 		}
@@ -55,13 +55,13 @@ func (s *MetricsGrpsServer) UpdateMetric(c context.Context, req *pb.UpdateMetric
 
 	switch req.Metric.Value.(type) {
 	case *pb.MetricValue_Gauge:
-		newGaugeVal, err := service.UpdateAndGetGaugeMetric(c, s.storage, req.Metric.MetricId, req.Metric.GetGauge())
+		newGaugeVal, err := service.UpdateAndGetGaugeMetric(c, s.Storage, req.Metric.MetricId, req.Metric.GetGauge())
 		if err != nil {
 			return nil, status.Error(codes.Internal, "")
 		}
 		return &pb.UpdateMetricResponse{Metric: &pb.MetricValue{MetricId: req.Metric.MetricId, Value: &pb.MetricValue_Gauge{Gauge: newGaugeVal}}}, nil
 	case *pb.MetricValue_Counter:
-		newCounterVal, err := service.UpdateAndGetCounterMetric(c, s.storage, req.Metric.MetricId, req.Metric.GetCounter())
+		newCounterVal, err := service.UpdateAndGetCounterMetric(c, s.Storage, req.Metric.MetricId, req.Metric.GetCounter())
 		if err != nil {
 			return nil, status.Error(codes.Internal, "")
 		}
@@ -99,7 +99,7 @@ func (s *MetricsGrpsServer) UpdateMetricsBatch(c context.Context, req *pb.Update
 		return nil, status.Error(codes.Internal, "")
 	}
 
-	err := service.UpdateMetrics(c, s.storage, models)
+	err := service.UpdateMetrics(c, s.Storage, models)
 
 	if err != nil {
 		return nil, status.Error(codes.Internal, "")
@@ -109,12 +109,12 @@ func (s *MetricsGrpsServer) UpdateMetricsBatch(c context.Context, req *pb.Update
 }
 
 func (s *MetricsGrpsServer) PingDB(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
-	if s.dbpool == nil {
+	if s.DBPool == nil {
 		return nil, status.Error(codes.Internal, "db connection is unused")
 	}
 
 	var ping string
-	err := s.dbpool.QueryRow(context.Background(), "SELECT 'ping'").Scan(&ping)
+	err := s.DBPool.QueryRow(context.Background(), "SELECT 'ping'").Scan(&ping)
 	if err == nil && ping == "ping" {
 		logger.Log.Debug("Executed ping command successfully")
 		return &emptypb.Empty{}, nil

@@ -53,7 +53,7 @@ func parseFlags() {
 	flag.StringVar(&config.RSAPubKeyBase64, "crypto-key", "", "RSA base64 public key, used to encrypt request body, if set")
 	flag.StringVar(&configFilenameFlag, "c", "", "path to configuration file in JSON format")
 	flag.StringVar(&configFilenameFlag, "config", "", "path to configuration file in JSON format")
-	flag.BoolVar(&config.UseGRPC, "g", true, "should use GRPC instead of REST")
+	flag.BoolVar(&config.UseGRPC, "g", false, "should use GRPC instead of REST")
 	flag.Parse()
 
 	if err := env.Parse(&config); err != nil {

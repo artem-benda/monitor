@@ -18,6 +18,7 @@ require (
 	github.com/alecthomas/units v0.0.0-20231202071711-9a357b53e9c9 // indirect
 	github.com/dave/dst v0.27.3 // indirect
 	github.com/fatih/structtag v1.2.0 // indirect
+	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/kisielk/errcheck v1.7.0 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
@@ -32,6 +33,9 @@ require (
 	golang.org/x/mod v0.18.0 // indirect
 	golang.org/x/term v0.21.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240528184218-531527333157 // indirect
+	google.golang.org/grpc v1.65.0 // indirect
+	google.golang.org/protobuf v1.34.1 // indirect
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6 // indirect
 )
 

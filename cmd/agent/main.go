@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"os/signal"
 	"sync"
@@ -16,6 +15,7 @@ import (
 	"github.com/artem-benda/monitor/internal/client/requests"
 	"github.com/artem-benda/monitor/internal/client/service"
 	"github.com/artem-benda/monitor/internal/client/storage"
+	pb "github.com/artem-benda/monitor/internal/grpc/mon"
 	"github.com/artem-benda/monitor/internal/logger"
 	"github.com/artem-benda/monitor/internal/model"
 	"github.com/artem-benda/monitor/internal/retry"
@@ -50,16 +50,6 @@ func main() {
 		}()
 	}
 
-	client := resty.New()
-	serverEndpointURL := fmt.Sprintf("http://%s", config.ServerEndpoint)
-
-	logger.Log.Debug("Starting with base URL", zap.String("baseURL", serverEndpointURL))
-
-	client.SetBaseURL(serverEndpointURL)
-	client.SetTimeout(30 * time.Second)
-	client.OnAfterResponse(logger.NewRestyResponseLogger())
-	client.Header.Add("X-Real-IP", mustGetLocalIPAddr(config.ServerEndpoint).String())
-
 	retryController := retry.NewRetryController(errors.ErrNetwork{}, errors.ErrServerTemporary{})
 
 	// Слушаем нужные сигналы от ОС
@@ -73,11 +63,22 @@ func main() {
 
 	var wg sync.WaitGroup
 
+	var sendMetrics func(metrics map[model.MetricKey]model.MetricValue) error
+
+	if config.UseGRPC {
+		client, conn := mustCreateGRPCClient()
+		defer conn.Close()
+		sendMetrics = createGRPCSendMetrics(client, retryController)
+	} else {
+		client := mustCreateRestyClient()
+		sendMetrics = createRESTSendMetrics(client, retryController)
+	}
+
 	for i := 0; i < config.MaxParallelWorkers; i++ {
 		wg.Add(1)
 		go func(id int) {
 			defer wg.Done()
-			sendMetricsWorker(id, client, retryController, metricsCh)
+			sendMetricsWorker(id, sendMetrics, metricsCh)
 		}(i)
 	}
 
@@ -152,8 +153,7 @@ func fanIn(chs ...<-chan map[model.MetricKey]model.MetricValue) <-chan map[model
 	return out
 }
 
-func sendMetricsWorker(id int, client *resty.Client, retryController retry.RetryController, in <-chan map[model.MetricKey]model.MetricValue) {
-	rsaPublicKey := mustParsePublicKey(config.RSAPubKeyBase64)
+func sendMetricsWorker(id int, sendMetrics func(map[model.MetricKey]model.MetricValue) error, in <-chan map[model.MetricKey]model.MetricValue) {
 	isShutdown := false
 	for {
 		metrics := make(map[model.MetricKey]model.MetricValue)
@@ -177,7 +177,7 @@ func sendMetricsWorker(id int, client *resty.Client, retryController retry.Retry
 			}
 		}
 		logger.Log.Debug("sending metrics", zap.Int("workerId", id))
-		err := requests.SendAllMetrics(client, retryController, metrics, []byte(config.Key), rsaPublicKey)
+		err := sendMetrics(metrics)
 
 		if err != nil {
 			logger.Log.Debug("error sending metrics batch", zap.Int("workerId", id), zap.Error(err))
@@ -190,5 +190,34 @@ func sendMetricsWorker(id int, client *resty.Client, retryController retry.Retry
 
 		storage.CounterStore.Reset()
 		time.Sleep(time.Duration(config.ReportInterval) * time.Second)
+	}
+}
+
+func createRESTSendMetrics(client *resty.Client, retryController retry.RetryController) func(metrics map[model.MetricKey]model.MetricValue) error {
+	rsaPublicKey := mustParsePublicKey(config.RSAPubKeyBase64)
+	return func(metrics map[model.MetricKey]model.MetricValue) error {
+		return requests.SendAllMetrics(client, retryController, metrics, []byte(config.Key), rsaPublicKey)
+	}
+}
+
+func createGRPCSendMetrics(client pb.MonitorServiceClient, retryController retry.RetryController) func(metrics map[model.MetricKey]model.MetricValue) error {
+	return func(metrics map[model.MetricKey]model.MetricValue) error {
+		dtos := make([]*pb.MetricValue, 0)
+		for k, v := range metrics {
+			var dto *pb.MetricValue
+			if k.Kind == model.GaugeKind {
+				dto = &pb.MetricValue{MetricId: k.Name, Value: &pb.MetricValue_Gauge{Gauge: v.Gauge}}
+			} else if k.Kind == model.CounterKind {
+				dto = &pb.MetricValue{MetricId: k.Name, Value: &pb.MetricValue_Counter{Counter: v.Counter}}
+			}
+
+			dtos = append(dtos, dto)
+		}
+		err := retryController.Run(func() (err error) {
+			_, updErr := client.UpdateMetricsBatch(context.Background(), &pb.UpdateMetricsBatchRequest{Metrics: dtos})
+			return updErr
+		})
+
+		return err
 	}
 }

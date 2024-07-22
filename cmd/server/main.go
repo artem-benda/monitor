@@ -13,6 +13,7 @@ import (
 
 	"github.com/artem-benda/monitor/internal/crypt"
 	"github.com/artem-benda/monitor/internal/gzipper"
+	"github.com/artem-benda/monitor/internal/ipfilter"
 	"github.com/artem-benda/monitor/internal/logger"
 	"github.com/artem-benda/monitor/internal/retry"
 	"github.com/artem-benda/monitor/internal/server/errors"
@@ -116,6 +117,7 @@ func main() {
 func newAppRouter() *chi.Mux {
 	r := chi.NewRouter()
 	r.Use(logger.LoggerMiddleware)
+	r.Use(ipfilter.NewIPFilterMiddleware(mustParseTrustedSubnetCIDR(config.TrustedSubnet)))
 	r.Use(signer.CreateVerifyAndSignMiddleware([]byte(config.Key)))
 	r.Use(crypt.NewDecryptMiddleware(mustParseRSAPrivateKey(config.RSAPrivKeyBase64)))
 	r.Use(gzipper.GzipMiddleware)

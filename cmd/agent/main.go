@@ -58,6 +58,7 @@ func main() {
 	client.SetBaseURL(serverEndpointURL)
 	client.SetTimeout(30 * time.Second)
 	client.OnAfterResponse(logger.NewRestyResponseLogger())
+	client.Header.Add("X-Real-IP", mustGetLocalIPAddr(config.ServerEndpoint).String())
 
 	retryController := retry.NewRetryController(errors.ErrNetwork{}, errors.ErrServerTemporary{})
 
